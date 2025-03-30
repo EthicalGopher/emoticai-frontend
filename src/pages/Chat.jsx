@@ -1,14 +1,17 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChat } from "@/contexts/ChatContext";
 import ChatInput from "@/components/ChatInput";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 
 const Chat = () => {
   const { messages, loading } = useChat();
   const messagesEndRef = useRef(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -17,14 +20,25 @@ const Chat = () => {
   }, [messages]);
 
   return (
-    <div className="flex h-screen">
-      <Sidebar open={sidebarOpen} />
+    <div className="flex h-screen relative">
+      <div className={`${sidebarOpen ? 'fixed inset-0 z-50 bg-background' : 'hidden md:block'}`}>
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      </div>
       <div className="flex-1 flex flex-col">
-        <Header toggleSidebar={toggleSidebar} />
+        <Header>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={toggleSidebar}
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </Header>
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full px-4">
             {messages.map((message, index) => (
-              <div key={index} className="p-4 border-b">
+              <div key={index} className="py-4 border-b">
                 <div className={`flex items-start gap-4 ${message.role === "user" ? "justify-end" : ""}`}>
                   <p className="text-sm">{message.content}</p>
                 </div>
@@ -41,8 +55,8 @@ const Chat = () => {
             )}
             <div ref={messagesEndRef} />
           </ScrollArea>
-          <ChatInput />
         </div>
+        <ChatInput />
       </div>
     </div>
   );

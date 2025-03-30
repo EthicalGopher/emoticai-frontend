@@ -1,4 +1,8 @@
+
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Send } from "lucide-react";
 
 const ChatInput = () => {
   const [message, setMessage] = useState("");
@@ -12,18 +16,18 @@ const ChatInput = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t">
-      <div className="flex gap-2">
-        <input
+    <form onSubmit={handleSubmit} className="p-4 border-t bg-background">
+      <div className="flex gap-2 max-w-2xl mx-auto">
+        <Input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="flex-1 p-2 border rounded"
           placeholder="Type a message..."
+          className="flex-1"
         />
-        <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
-          Send
-        </button>
+        <Button type="submit" size="icon">
+          <Send className="h-4 w-4" />
+        </Button>
       </div>
     </form>
   );
