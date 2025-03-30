@@ -189,7 +189,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       if (remainingChats.length > 0) {
         setCurrentChatId(remainingChats[0].id)
       } else {
-        createNewChat()
+        setCurrentChatId("")
       }
     }
     toast({
@@ -199,15 +199,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const deleteAllChats = () => {
-    const initialChat = {
-      id: nanoid(),
-      title: "New Chat",
-      messages: [],
-    }
-    setChats([initialChat])
-    setCurrentChatId(initialChat.id)
-    localStorage.setItem("helpingai_chats", JSON.stringify([initialChat]))
-    localStorage.setItem("helpingai_current_chat_id", initialChat.id)
+    setChats([])
+    setCurrentChatId("")
+    localStorage.setItem("helpingai_chats", JSON.stringify([]))
+    localStorage.setItem("helpingai_current_chat_id", "")
     toast({
       title: "All chats deleted",
       description: "All chat history has been cleared.",
