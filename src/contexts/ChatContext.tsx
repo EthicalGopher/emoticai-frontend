@@ -46,18 +46,18 @@ type ChatContextType = {
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
-  const { toast } = useToast()
-  const { user } = useAuth()
   const [chats, setChats] = useState<Chat[]>([])
   const [currentChatId, setCurrentChatId] = useState<string>("")
-  const [isStorageFull, setIsStorageFull] = useState(false)
-  const [showStorageAlert, setShowStorageAlert] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [isStorageFull, setIsStorageFull] = useState(false)
+  const { toast } = useToast()
+  const { user } = useAuth()
 
+  // Removed redundant redeclaration of
   useEffect(() => {
     const storedChats = localStorage.getItem("helpingai_chats")
     const storedCurrentChatId = localStorage.getItem("helpingai_current_chat_id")
-
+    
     if (storedChats) {
       try {
         const parsedChats = JSON.parse(storedChats)
@@ -134,7 +134,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true)
 
     try {
-      const response = await axios.get(`http://127.0.0.1:9045?input=${content}&username=${user?.username || "unknown"}`)
+      const response = await axios.post("/api/chat", { message: content })
 
       const botMessage: Message = {
         id: nanoid(),
