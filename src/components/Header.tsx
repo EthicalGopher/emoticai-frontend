@@ -3,6 +3,7 @@
 import React from "react"
 import { Button } from "../components/ui/button"
 import { Menu } from "lucide-react"
+import { Link } from "react-router-dom"
 
 interface HeaderProps {
   toggleSidebar: () => void
@@ -20,7 +21,11 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         >
           <Menu size={16} />
         </Button>
+        <div className="flex justify-between">
+
         <div className="text-xl font-bold text-blue-500 dark:text-blue-400">EmoticAi</div>
+        <div><Link to="/speech">Voice Assistent</Link></div>
+        </div>
       </div>
     </div>
   )

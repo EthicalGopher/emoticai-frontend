@@ -1,3 +1,4 @@
+// c:\Users\sankh\Downloads\emoticaimain\src\pages\Index.tsx
 "use client"
 
 import React from "react"
@@ -11,20 +12,21 @@ import Chat from "./Chat"
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth()
 
-  return isAuthenticated ? <Chat /> : <Login />
-}
-
-const Index: React.FC = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ChatProvider>
-          <AppContent />
-        </ChatProvider>
-      </AuthProvider>
+    <ThemeProvider> {/* Wrap Chat or Login in ThemeProvider */}
+      {isAuthenticated ? <Chat /> : <Login />}
     </ThemeProvider>
   )
 }
 
-export default Index
+const Index: React.FC = () => {
+  return (
+    <AuthProvider>
+      <ChatProvider>
+        <AppContent />
+      </ChatProvider>
+    </AuthProvider>
+  )
+}
 
+export default Index

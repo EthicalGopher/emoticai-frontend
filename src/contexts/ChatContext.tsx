@@ -52,6 +52,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [isStorageFull, setIsStorageFull] = useState(false)
   const { toast } = useToast()
   const { user } = useAuth()
+ 
 
   // Removed redundant redeclaration of
   useEffect(() => {
@@ -134,11 +135,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true)
 
     try {
-      const response = await axios.post("/api/chat", { message: content })
-
+      const username = localStorage.getItem("user")
+      const name1 = username ? JSON.parse(username).name : ""
+     
+      const response = await axios.get(`http://127.0.0.1:9045?input=${encodeURIComponent(userMessage.content)}&username=${encodeURIComponent(name1)}`)
+      
       const botMessage: Message = {
         id: nanoid(),
-        content: response.data.message,
+        content: response.data,
         isUser: false,
         timestamp: Date.now(),
         chatId: currentChatId,

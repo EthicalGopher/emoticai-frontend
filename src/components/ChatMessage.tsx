@@ -58,4 +58,3 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 }
 
 export default ChatMessage
-
