@@ -4,14 +4,12 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Plus, Trash2, Moon, Sun, LogOut, X, Trash } from "lucide-react";
 import { Button } from "./ui/button";
-import {MessageSquare, User} from "lucide-react"
-
 
 const Sidebar = ({ open, onClose }) => {
   const { isDarkMode, toggleTheme } = useTheme();
-  const { clearChat, messages, chats, currentChatId, switchChat, createNewChat, loading, deleteAllChats } = useChat(); 
+  const { clearChat, messages, chats, currentChatId, switchChat, createNewChat, loading, deleteAllChats } = useChat(); //Added loading state
   const { user, logout } = useAuth();
-  const [isDeleting, setIsDeleting] = useState(null); 
+  const [isDeleting, setIsDeleting] = useState(null); // Added for delete feedback
 
 
   useEffect(() => {
@@ -36,128 +34,95 @@ const Sidebar = ({ open, onClose }) => {
   };
 
   const handleClearChat = (chatId) => {
-    setIsDeleting(chatId); 
+    setIsDeleting(chatId); //Added for delete feedback
     setTimeout(() => {
       clearChat(chatId);
-      setIsDeleting(null); 
+      setIsDeleting(null); //Added for delete feedback
 
       if (window.innerWidth < 768) {
         onClose();
       }
-    }, 500); 
+    }, 500); // Simulate delete delay
   };
 
   return (
-    <aside
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r shadow-lg transform transition-transform duration-300 ease-in-out ${
-        open ? "translate-x-0" : "-translate-x-full"
-      } md:relative md:translate-x-0`}
-    >
-      <div className="flex h-full flex-col">
-        {/* Header */}
-        <div className="border-b p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">HelpingAI</h2>
-            <Button variant="ghost" size="icon" onClick={onClose} className="md:hidden">
-              <X size={20} />
-            </Button>
-          </div>
-        </div>
-
-        {/* User info and theme toggle */}
-        <div className="border-b p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <User size={20} />
-              <span className="font-medium">{getDisplayName()}</span>
-            </div>
-            <Button variant="ghost" size="icon" onClick={toggleTheme}>
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Chat navigation */}
-        <div className="flex-1 overflow-y-auto p-2">
-          <Button
-            onClick={handleCreateNewChat}
-            className="mb-2 w-full justify-start"
-            variant="outline"
-          >
-            <Plus size={16} className="mr-2" />
-            New Chat
+    <div className="flex h-full flex-col bg-background border-r w-75">
+      <div className="flex items-center justify-between p-4">
+        <h1 className="text-xl font-bold text-primary">HelpingAI</h1>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
-
-          {/* Chat list */}
-          <div className="space-y-1">
-            {Object.keys(chats)
-              .sort(
-                (a, b) =>
-                  (chats[b].createdAt || 0) - (chats[a].createdAt || 0)
-              )
-              .map((chatId) => (
-                <div
-                  key={chatId}
-                  onClick={!loading ? () => switchChat(chatId) : null}
-                  className={`group flex items-center justify-between rounded px-2 py-1.5 cursor-pointer ${
-                    chatId === currentChatId
-                      ? "bg-muted"
-                      : "hover:bg-muted/50"
-                  } ${
-                    isDeleting === chatId ? "opacity-50" : ""
-                  } ${loading ? "cursor-not-allowed opacity-70" : ""}`}
-                >
-                  <div className="flex items-center truncate">
-                    <MessageSquare
-                      size={16}
-                      className="mr-2 shrink-0 text-muted-foreground"
-                    />
-                    <span className="truncate text-sm">
-                      {chats[chatId].title || "New Chat"}
-                    </span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0 group-hover:opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleClearChat(chatId);
-                    }}
-                    disabled={loading}
-                  >
-                    <Trash size={14} />
-                  </Button>
-                </div>
-              ))}
-          </div>
-        </div>
-
-        {/* Footer actions */}
-        <div className="border-t p-4">
-          <div className="space-y-2">
-            <Button
-              onClick={deleteAllChats}
-              variant="destructive"
-              className="w-full justify-start"
-              disabled={loading}
-            >
-              <Trash size={16} className="mr-2" />
-              Clear All Chats
-            </Button>
-            <Button
-              onClick={logout}
-              variant="outline"
-              className="w-full justify-start"
-              disabled={loading}
-            >
-              <LogOut size={16} className="mr-2" />
-              Logout
-            </Button>
-          </div>
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
       </div>
-    </aside>
+
+      <div className="flex items-center p-4 border-y">
+        <div className="flex-1">
+          <p className="text-sm font-medium">{getDisplayName()}</p>
+        </div>
+        <Button variant="ghost" size="icon" onClick={logout}>
+          <LogOut className="h-5 w-5" />
+        </Button>
+      </div>
+
+      <div className="flex-1 overflow-auto p-4 space-y-2">
+        <div className="space-y-2">
+          <Button
+            className="w-full justify-start gap-2"
+            variant="outline"
+            onClick={handleCreateNewChat}
+            disabled={loading}
+          >
+            <Plus className="h-4 w-4" />
+            {loading ? 'Creating...' : 'New Chat'}
+          </Button>
+          {chats.length > 1 && (
+            <Button
+              className="w-full justify-start gap-2 text-destructive"
+              variant="outline"
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete all chats?')) {
+                  deleteAllChats();
+                }
+              }}
+            >
+              <Trash className="h-4 w-4" />
+              Delete All Chats
+            </Button>
+          )}
+        </div>
+
+        {chats.map((chat) => (
+          <div
+            key={chat.id}
+            className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer ${
+              chat.id === currentChatId
+                ? "bg-primary/10 text-primary"
+                : "hover:bg-blue-200 hover:text-black"
+            }`}
+            onClick={() => switchChat(chat.id)}
+          >
+            <span className="flex-1 truncate">{chat.title || ""}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 opacity-0 group-hover:opacity-100 ${isDeleting === chat.id ? 'animate-pulse' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm('Are you sure you want to delete this chat?')) {
+                  clearChat(chat.id);
+                }
+              }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

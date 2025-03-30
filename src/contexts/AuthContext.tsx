@@ -1,14 +1,14 @@
+"use client"
 
-import React, { createContext, useContext, useState, useEffect } from "react"
+import React from "react"
+import { createContext, useContext, useState, useEffect } from "react"
+import { toast } from 'react-hot-toast';
 
-interface User {
+type User = {
   name: string
-  createdAt: number
-  lastActive: number
-  isGuest?: boolean
 }
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null
   login: (username: string) => void
   loginAsGuest: () => void
@@ -22,102 +22,68 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('user')
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser)
-      if (parsedUser.isGuest) {
-        // Don't restore guest users on page load
-        return null
-      }
-      return parsedUser
-    }
-    return null
+    return savedUser ? JSON.parse(savedUser) : null
   })
-  const [isGuest, setIsGuest] = useState(false)
+  const [isGuest, setIsGuest] = useState(false);
 
-  // Clean up inactive users (10 days)
   useEffect(() => {
-    const cleanupInactiveUsers = () => {
-      const users = JSON.parse(localStorage.getItem('users') || '[]')
-      const tenDaysAgo = Date.now() - (10 * 24 * 60 * 60 * 1000)
-      const activeUsers = users.filter((u: User) => u.lastActive > tenDaysAgo)
-      localStorage.setItem('users', JSON.stringify(activeUsers))
-    }
-    cleanupInactiveUsers()
-  }, [])
-
-  // Handle guest user cleanup on refresh or navigation
-  useEffect(() => {
-    if (isGuest) {
-      const handleBeforeUnload = () => {
-        localStorage.removeItem('guestData')
-        localStorage.removeItem('user')
-      }
-      window.addEventListener('beforeunload', handleBeforeUnload)
-      return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-    }
-  }, [isGuest])
-
-  const login = (username: string) => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]')
-    const existingUser = users.find((u: User) => u.name === username)
-    
-    let currentUser: User
-    
-    if (!existingUser) {
-      alert('You have created a new account!')
-      currentUser = {
-        name: username,
-        createdAt: Date.now(),
-        lastActive: Date.now(),
-        isGuest: false
-      }
-      users.push(currentUser)
-      localStorage.setItem('users', JSON.stringify(users))
+    // Check if user is logged in from localStorage.  This is redundant with the useState above but kept for completeness
+    const storedUser = localStorage.getItem("helpingai_user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     } else {
-      existingUser.lastActive = Date.now()
-      currentUser = existingUser
-      localStorage.setItem('users', JSON.stringify(users))
+      localStorage.clear();
     }
+  }, []);
 
-    setIsGuest(false)
-    setUser(currentUser)
-    localStorage.setItem('user', JSON.stringify(currentUser))
+  const getDisplayName = () => {
+    return user ? user.name : "Guest"
   }
 
   const loginAsGuest = () => {
-    const guestUser = { 
-      name: 'Guest',
-      createdAt: Date.now(),
-      lastActive: Date.now(),
-      isGuest: true
+    setIsGuest(true);
+    setUser({ name: 'Guest' });
+    localStorage.setItem('user', JSON.stringify({name: 'Guest'})); //Store guest user
+  }
+
+  const login = async (username: string) => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      const oldUser = JSON.parse(savedUser);
+      if (oldUser.name !== username) {
+        toast({
+          title: "New Account Created",
+          description: "Your data has been reset for the new account.",
+        });
+        localStorage.clear();
+      }
     }
-    setUser(guestUser)
-    setIsGuest(true)
-    localStorage.setItem('user', JSON.stringify(guestUser))
-    // Clear any existing guest data
-    localStorage.removeItem('guestData')
+
+    setIsGuest(false);
+    const newUser = { name: username };
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
   }
 
   const logout = () => {
-    if (isGuest) {
-      localStorage.removeItem('guestData')
-    }
-    localStorage.removeItem('user')
-    setUser(null)
-    setIsGuest(false)
+    setUser(null);
+    localStorage.removeItem("user");
+    setIsGuest(false); // added to reset guest status on logout
   }
 
+  useEffect(() => {
+    if (isGuest) {
+      window.addEventListener('beforeunload', () => {
+        localStorage.clear();
+      });
+    }
+    return () => {
+      window.removeEventListener('beforeunload', () => localStorage.clear())
+    }
+  }, [isGuest]);
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      loginAsGuest, 
-      logout, 
-      isAuthenticated: !!user,
-      isGuest 
-    }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, loginAsGuest, logout, isAuthenticated: !!user, isGuest }}>{children}</AuthContext.Provider>
   )
 }
 
