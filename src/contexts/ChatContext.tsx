@@ -138,7 +138,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       const username = localStorage.getItem("user")
       const name1 = username ? JSON.parse(username).name : ""
      
-      const response = await axios.get(`http://127.0.0.1:9045?input=${encodeURIComponent(userMessage.content)}&username=${encodeURIComponent(name1)}`)
+      const response = await axios.get(`https://emoticai-backend.onrender.com/?input=${encodeURIComponent(userMessage.content)}&username=${encodeURIComponent(name1)}`)
       
       const botMessage: Message = {
         id: nanoid(),

@@ -14,12 +14,14 @@ const SpeechToTextConverter = memo(() => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [username2,setUsername2] = useState("")
 
   const handleClear = () => {
     setTranscript('');
   };
 
   useEffect(() => {
+    
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -51,13 +53,16 @@ const SpeechToTextConverter = memo(() => {
   }, []);
 
   useEffect(() => {
+    const name2 = localStorage.getItem('user')
+    const name=JSON.parse(name2).name
+    // console.log(name2)
     const handleFetch = async () => {
       if (transcript.trim() === '') return; // Don't fetch if transcript is empty
       setIsLoading(true);
       try {
         console.log(transcript);
         const res = await axios.get(
-          `https://agriroad-chat-tybs.onrender.com/getresponse?input=${transcript}`
+          `https://emoticai-backend.onrender.com/?input=${transcript}&username=${name}`
         );
         setResponse(res.data); // Access res.data instead of res.Data
         console.log(res.data);
@@ -76,7 +81,7 @@ const SpeechToTextConverter = memo(() => {
     // Update the scene based on the listening state
     if (isListening) {
       setCurrentScene(
-        'https://prod.spline.design/ZYrKXaQkBmgB2u3l/scene.splinecode'
+        'https://prod.spline.design/wpf0-lMEBGUtlUwn/scene.splinecode'
         
       ); // Listening scene
     } else {
@@ -157,7 +162,7 @@ const SpeechToTextConverter = memo(() => {
 
   return (
     <div
-      className="container mx-auto p-6 box"
+      className="container mx-auto p-6 box bg-background"
 
     >
   

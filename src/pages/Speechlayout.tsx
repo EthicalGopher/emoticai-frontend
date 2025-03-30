@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SpeechToTextConverter from "../components/sts";
 import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
+
 
 const Speechlayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -23,7 +23,7 @@ const Speechlayout = () => {
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-          <p className="text-lg font-medium">Loading your chats...</p>
+          <p className="text-lg font-medium">Loading your interface...</p>
         </div>
       </div>
     );
@@ -37,7 +37,7 @@ const Speechlayout = () => {
         <Header toggleSidebar={toggleSidebar} />
         <div className="flex-1 overflow-hidden relative ">
     
-        <div className="sticky bottom-0 bg-background/80 backdrop-blur-sm">
+        <div className="sticky bottom-0 bg-background/80 backdrop-blur-sm " style={{scale:"1",marginTop:"-40px"}}>
           <SpeechToTextConverter />
         </div>
         </div>

@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    --textcolor:black;
     --background: 220 26% 14%;
     --foreground: 210 40% 98%;
 
@@ -52,6 +53,7 @@
   }
 
   .dark {
+    --textcolor:white;
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
 
