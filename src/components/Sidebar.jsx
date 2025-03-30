@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useChat } from "@/contexts/ChatContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Plus, Trash2, Moon, Sun, LogOut, X } from "lucide-react";
+import { Plus, Trash2, Moon, Sun, LogOut, X, Trash } from "lucide-react";
 import { Button } from "./ui/button";
 
 const Sidebar = ({ open, onClose }) => {
   const { isDarkMode, toggleTheme } = useTheme();
-  const { clearChat, messages, chats, currentChatId, switchChat, createNewChat, loading } = useChat(); //Added loading state
+  const { clearChat, messages, chats, currentChatId, switchChat, createNewChat, loading, deleteAllChats } = useChat(); //Added loading state
   const { user, logout } = useAuth();
   const [isDeleting, setIsDeleting] = useState(null); // Added for delete feedback
 
@@ -69,15 +69,31 @@ const Sidebar = ({ open, onClose }) => {
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-2">
-        <Button
-          className="w-full justify-start gap-2"
-          variant="outline"
-          onClick={handleCreateNewChat}
-          disabled={loading}
-        >
-          <Plus className="h-4 w-4" />
-          {loading ? 'Creating...' : 'New Chat'}
-        </Button>
+        <div className="space-y-2">
+          <Button
+            className="w-full justify-start gap-2"
+            variant="outline"
+            onClick={handleCreateNewChat}
+            disabled={loading}
+          >
+            <Plus className="h-4 w-4" />
+            {loading ? 'Creating...' : 'New Chat'}
+          </Button>
+          {chats.length > 1 && (
+            <Button
+              className="w-full justify-start gap-2 text-destructive"
+              variant="outline"
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete all chats?')) {
+                  deleteAllChats();
+                }
+              }}
+            >
+              <Trash className="h-4 w-4" />
+              Delete All Chats
+            </Button>
+          )}
+        </div>
 
         {chats.map((chat) => (
           <div

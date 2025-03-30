@@ -194,6 +194,20 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     })
   }
 
+  const deleteAllChats = () => {
+    const initialChat = {
+      id: nanoid(),
+      title: "New Chat",
+      messages: []
+    }
+    setChats([initialChat])
+    setCurrentChatId(initialChat.id)
+    toast({
+      title: "All chats deleted",
+      description: "All chat history has been cleared.",
+    })
+  }
+
   const deleteMessage = (messageId: string) => {
     setChats(prev => prev.map(chat => 
       chat.id === currentChatId 
@@ -213,7 +227,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         loading, 
         deleteMessage,
         createNewChat,
-        switchChat
+        switchChat,
+        deleteAllChats
       }}
     >
       {children}
