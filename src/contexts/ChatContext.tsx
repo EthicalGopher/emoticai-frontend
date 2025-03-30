@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from "react"
@@ -20,204 +21,196 @@ export type Message = {
   content: string
   isUser: boolean
   timestamp: number
-  chatId?: string // Associate messages with specific chats
+  chatId: string
+}
+
+type Chat = {
+  id: string
+  title: string
+  messages: Message[]
 }
 
 type ChatContextType = {
+  chats: Chat[]
+  currentChatId: string
   messages: Message[]
   sendMessage: (content: string) => Promise<void>
-  clearChat: () => void
+  clearChat: (chatId: string) => void
   loading: boolean
   deleteMessage: (id: string) => void
+  createNewChat: () => void
+  switchChat: (chatId: string) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
-// Check if localStorage is full
-const isLocalStorageFull = () => {
-  try {
-    const testKey = `test_${Date.now()}`
-    localStorage.setItem(testKey, "1")
-    localStorage.removeItem(testKey)
-    return false
-  } catch (e) {
-    return true
-  }
-}
-
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [chats, setChats] = useState<Chat[]>([])
+  const [currentChatId, setCurrentChatId] = useState<string>("")
   const [loading, setLoading] = useState(false)
   const [isStorageFull, setIsStorageFull] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    // Load messages from localStorage
-    const storedMessages = localStorage.getItem("helpingai_messages")
-    if (storedMessages) {
+    const storedChats = localStorage.getItem("helpingai_chats")
+    if (storedChats) {
       try {
-        setMessages(JSON.parse(storedMessages))
+        const parsedChats = JSON.parse(storedChats)
+        setChats(parsedChats)
+        if (parsedChats.length > 0) {
+          setCurrentChatId(parsedChats[0].id)
+        }
       } catch (error) {
-        console.error("Failed to parse stored messages:", error)
-        localStorage.removeItem("helpingai_messages")
+        console.error("Failed to parse stored chats:", error)
+        localStorage.removeItem("helpingai_chats")
       }
+    } else {
+      // Create initial chat
+      const initialChat = {
+        id: nanoid(),
+        title: "New Chat",
+        messages: []
+      }
+      setChats([initialChat])
+      setCurrentChatId(initialChat.id)
     }
   }, [])
 
   useEffect(() => {
-    // Save messages to localStorage whenever they change
     try {
-      localStorage.setItem("helpingai_messages", JSON.stringify(messages))
+      localStorage.setItem("helpingai_chats", JSON.stringify(chats))
       setIsStorageFull(false)
     } catch (e) {
-      console.warn("LocalStorage is full or unavailable:", e)
+      console.warn("LocalStorage is full:", e)
       setIsStorageFull(true)
+      toast({
+        title: "Storage Full",
+        description: "Please delete some chats to continue.",
+        variant: "destructive"
+      })
     }
-  }, [messages])
+  }, [chats])
 
-  const deleteMessage = (id: string) => {
-    setMessages((prev) => prev.filter((message) => message.id !== id))
-    toast({
-      title: "Message deleted",
-      description: "The message has been removed from your chat history.",
-    })
+  const createNewChat = () => {
+    const newChat = {
+      id: nanoid(),
+      title: "New Chat",
+      messages: []
+    }
+    setChats(prev => [...prev, newChat])
+    setCurrentChatId(newChat.id)
   }
+
+  const switchChat = (chatId: string) => {
+    setCurrentChatId(chatId)
+  }
+
+  const messages = chats.find(chat => chat.id === currentChatId)?.messages || []
 
   const sendMessage = async (content: string) => {
     if (!content.trim()) return
 
-    // Check if localStorage is full before adding new messages
-    if (isLocalStorageFull()) {
-      setIsStorageFull(true)
-      toast({
-        title: "Storage Full",
-        description: "Please delete some messages to continue chatting.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Add user message
     const userMessage: Message = {
       id: nanoid(),
       content,
       isUser: true,
       timestamp: Date.now(),
+      chatId: currentChatId
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    setChats(prev => prev.map(chat => 
+      chat.id === currentChatId 
+        ? { ...chat, messages: [...chat.messages, userMessage] }
+        : chat
+    ))
+
     setLoading(true)
 
     try {
-      // Make API request with proper error handling
-      const response = await axios.get(`http://127.0.0.1:9045`, {
-        params: { input: content },
-        timeout: 10000, // 10-second timeout
-      })
-
-      // Add AI response
-      const aiMessage: Message = {
+      // Your API call here
+      const response = await axios.post("/api/chat", { message: content })
+      
+      const botMessage: Message = {
         id: nanoid(),
-        content: response.data || "I'm not sure how to respond to that.",
+        content: response.data.message,
         isUser: false,
         timestamp: Date.now(),
+        chatId: currentChatId
       }
 
-      setMessages((prev) => [...prev, aiMessage])
-    } catch (error) {
-      console.error("Error fetching AI response:", error)
-      toast({
-        title: "Error",
-        description: "Failed to get a response. Please try again.",
-        variant: "destructive",
-      })
+      setChats(prev => prev.map(chat => 
+        chat.id === currentChatId 
+          ? { ...chat, messages: [...chat.messages, botMessage] }
+          : chat
+      ))
 
-      // Add error message from AI
+      // Update chat title if it's the first message
+      if (messages.length === 0) {
+        setChats(prev => prev.map(chat => 
+          chat.id === currentChatId 
+            ? { ...chat, title: content.slice(0, 10) + (content.length > 10 ? "..." : "") }
+            : chat
+        ))
+      }
+    } catch (error) {
+      console.error("Error sending message:", error)
       const errorMessage: Message = {
         id: nanoid(),
-        content: "Sorry, I encountered an error. Please try again later.",
+        content: "Sorry, there was an error processing your message.",
         isUser: false,
         timestamp: Date.now(),
+        chatId: currentChatId
       }
-
-      setMessages((prev) => [...prev, errorMessage])
+      setChats(prev => prev.map(chat => 
+        chat.id === currentChatId 
+          ? { ...chat, messages: [...chat.messages, errorMessage] }
+          : chat
+      ))
     } finally {
       setLoading(false)
     }
   }
 
-  const clearChat = () => {
-    setMessages([])
-    localStorage.removeItem("helpingai_messages")
+  const clearChat = (chatId: string) => {
+    setChats(prev => prev.filter(chat => chat.id !== chatId))
+    if (currentChatId === chatId) {
+      const remainingChats = chats.filter(chat => chat.id !== chatId)
+      if (remainingChats.length > 0) {
+        setCurrentChatId(remainingChats[0].id)
+      } else {
+        createNewChat()
+      }
+    }
     toast({
-      title: "Chat cleared",
-      description: "Your chat history has been cleared.",
+      title: "Chat deleted",
+      description: "The selected chat has been removed.",
     })
   }
 
-  return (
-    <>
-      <ChatContext.Provider value={{ messages, sendMessage, clearChat, loading, deleteMessage }}>
-        {children}
-      </ChatContext.Provider>
-      {isStorageFull && (
-        <StorageFullDialog messages={messages} setMessages={setMessages} onClose={() => setIsStorageFull(false)} />
-      )}
-    </>
-  )
-}
-
-// Component to handle localStorage full scenario
-const StorageFullDialog = ({
-  messages,
-  setMessages,
-  onClose,
-}: {
-  messages: Message[]
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
-  onClose: () => void
-}) => {
-  const handleClearOldest = () => {
-    // Remove oldest 5 messages
-    if (messages.length > 5) {
-      setMessages(messages.slice(5))
-    } else {
-      setMessages([])
-    }
-    onClose()
-  }
-
-  const handleClearAll = () => {
-    setMessages([])
-    localStorage.removeItem("helpingai_messages")
-    onClose()
+  const deleteMessage = (messageId: string) => {
+    setChats(prev => prev.map(chat => 
+      chat.id === currentChatId 
+        ? { ...chat, messages: chat.messages.filter(msg => msg.id !== messageId) }
+        : chat
+    ))
   }
 
   return (
-    <AlertDialog open={true}>
-      <AlertDialogContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-gray-900 dark:text-blue-400">Storage Full</AlertDialogTitle>
-          <AlertDialogDescription className="text-gray-600 dark:text-gray-300">
-            Your local storage is full. To continue chatting, you need to delete some messages.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel
-            onClick={onClose}
-            className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-300"
-          >
-            Cancel
-          </AlertDialogCancel>
-          <AlertDialogAction onClick={handleClearOldest} className="bg-blue-600 hover:bg-blue-700">
-            Clear Oldest Messages
-          </AlertDialogAction>
-          <AlertDialogAction onClick={handleClearAll} className="bg-red-600 hover:bg-red-700">
-            Clear All Messages
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ChatContext.Provider 
+      value={{ 
+        chats, 
+        currentChatId, 
+        messages, 
+        sendMessage, 
+        clearChat, 
+        loading, 
+        deleteMessage,
+        createNewChat,
+        switchChat
+      }}
+    >
+      {children}
+    </ChatContext.Provider>
   )
 }
 
@@ -228,4 +221,3 @@ export const useChat = () => {
   }
   return context
 }
-
