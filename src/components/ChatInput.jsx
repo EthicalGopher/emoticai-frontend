@@ -1,9 +1,9 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext";
+import { toast } from "@/components/ui/use-toast";
 
 const ChatInput = () => {
   const [message, setMessage] = useState("");
@@ -14,6 +14,19 @@ const ChatInput = () => {
     if (message.trim()) {
       await sendMessage(message.trim());
       setMessage("");
+    } else {
+      toast({
+        title: "Error",
+        description: "Please enter a message",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top-center",
+        style: {
+          minWidth: "200px",
+          textAlign: "center"
+        }
+      });
     }
   };
 

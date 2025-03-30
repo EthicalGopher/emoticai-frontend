@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useChat } from "@/contexts/ChatContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Plus, Trash2, Moon, Sun, LogOut } from "lucide-react";
+import { Plus, Trash2, Moon, Sun, LogOut, X } from "lucide-react";
 import { Button } from "./ui/button";
 
 const Sidebar = ({ open, onClose }) => {
@@ -43,11 +43,11 @@ const Sidebar = ({ open, onClose }) => {
             {chats.map((chat) => (
               <Button
                 key={chat.id}
-                className={`w-full justify-start ${chat.id === currentChatId ? 'bg-blue-600' : ''}`}
+                className={`w-full justify-start text-left ${chat.id === currentChatId ? 'bg-primary text-primary-foreground' : ''}`}
                 variant="ghost"
                 onClick={() => switchChat(chat.id)}
               >
-                {chat.title.substring(0, 10)}...
+                {chat.title.length > 20 ? `${chat.title.substring(0, 20)}...` : chat.title}
               </Button>
             ))}
           </div>
@@ -63,6 +63,14 @@ const Sidebar = ({ open, onClose }) => {
             Clear Chats
           </Button>
         </div>
+        <Button 
+          className="absolute top-2 right-2 md:hidden" 
+          variant="ghost" 
+          size="icon"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
