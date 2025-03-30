@@ -95,10 +95,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, [chats])
 
   const createNewChat = () => {
-    const chatNumber = chats.length + 1;
+    const date = new Date();
+    const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
     const newChat = {
       id: nanoid(),
-      title: `Chat ${chatNumber}`,
+      title: `Chat - ${formattedDate}`,
       messages: []
     }
     setChats(prev => [...prev, newChat])

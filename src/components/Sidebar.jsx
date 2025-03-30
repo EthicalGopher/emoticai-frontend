@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useChat } from "@/contexts/ChatContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -8,8 +7,10 @@ import { Button } from "./ui/button";
 
 const Sidebar = ({ open, onClose }) => {
   const { isDarkMode, toggleTheme } = useTheme();
-  const { clearChat, messages, chats, currentChatId, switchChat, createNewChat } = useChat();
+  const { clearChat, messages, chats, currentChatId, switchChat, createNewChat, loading } = useChat(); //Added loading state
   const { user, logout } = useAuth();
+  const [isDeleting, setIsDeleting] = useState(null); // Added for delete feedback
+
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -33,10 +34,15 @@ const Sidebar = ({ open, onClose }) => {
   };
 
   const handleClearChat = (chatId) => {
-    clearChat(chatId);
-    if (window.innerWidth < 768) {
-      onClose();
-    }
+    setIsDeleting(chatId); //Added for delete feedback
+    setTimeout(() => {
+      clearChat(chatId);
+      setIsDeleting(null); //Added for delete feedback
+
+      if (window.innerWidth < 768) {
+        onClose();
+      }
+    }, 500); // Simulate delete delay
   };
 
   return (
@@ -67,11 +73,12 @@ const Sidebar = ({ open, onClose }) => {
           className="w-full justify-start gap-2"
           variant="outline"
           onClick={handleCreateNewChat}
+          disabled={loading}
         >
           <Plus className="h-4 w-4" />
-          New Chat
+          {loading ? 'Creating...' : 'New Chat'}
         </Button>
-        
+
         {chats.map((chat) => (
           <div
             key={chat.id}
@@ -86,7 +93,7 @@ const Sidebar = ({ open, onClose }) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100"
+              className={`h-8 w-8 opacity-0 group-hover:opacity-100 ${isDeleting === chat.id ? 'animate-pulse' : ''}`} //Added animation for delete feedback
               onClick={(e) => {
                 e.stopPropagation();
                 handleClearChat(chat.id);
