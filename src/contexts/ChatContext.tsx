@@ -96,9 +96,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, [chats])
 
   const createNewChat = () => {
+    const chatCount = chats.length + 1;
     const newChat = {
       id: nanoid(),
-      title: "New Chat",
+      title: `Chat ${chatCount}`,
       messages: []
     }
     setChats(prev => [...prev, newChat])

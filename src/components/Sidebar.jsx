@@ -89,7 +89,10 @@ const Sidebar = ({ open, onClose }) => {
               className="h-8 w-8 opacity-0 group-hover:opacity-100"
               onClick={(e) => {
                 e.stopPropagation();
-                handleClearChat(chat.id);
+                e.preventDefault();
+                if (window.confirm('Are you sure you want to delete this chat?')) {
+                  clearChat(chat.id);
+                }
               }}
             >
               <Trash2 className="h-4 w-4" />
