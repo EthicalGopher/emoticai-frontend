@@ -3,9 +3,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
 
-type Message = {
-  role: 'user' | 'assistant'
+export type Message = {
+  id: string
   content: string
+  isUser: boolean
+  timestamp: number
+  chatId: string
 }
 
 export type Chat = {
@@ -15,7 +18,7 @@ export type Chat = {
   createdAt: number
 }
 
-type ChatContextType = {
+export interface ChatContextType {
   chats: Chat[]
   activeChat: Chat | null
   createChat: () => void
@@ -24,6 +27,7 @@ type ChatContextType = {
   updateChatTitle: (id: string, title: string) => void
   deleteChat: (id: string) => void
   clearChats: () => void
+  deleteMessage: (messageId: string) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -32,6 +36,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, isGuest } = useAuth()
   const [chats, setChats] = useState<Chat[]>([])
   const [activeChat, setActiveChat] = useState<Chat | null>(null)
+  const [currentChatId, setCurrentChatId] = useState<string>("")
 
   // Load chats from localStorage based on current user
   useEffect(() => {
@@ -89,7 +94,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Update title after first user message if still default
     let chatWithTitle = updatedChat
-    if (updatedChat.title === 'New Chat' && message.role === 'user') {
+    if (updatedChat.title === 'New Chat' && message.isUser) {
       // Use first 25 chars of message as title or full message if shorter
       const newTitle = message.content.length > 25 
         ? `${message.content.substring(0, 25)}...`
@@ -145,6 +150,16 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  const deleteMessage = (messageId: string) => {
+    setChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.id === currentChatId
+          ? { ...chat, messages: chat.messages.filter((msg) => msg.id !== messageId) }
+          : chat
+      )
+    )
+  }
+
   return (
     <ChatContext.Provider
       value={{
@@ -155,7 +170,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         addMessage,
         updateChatTitle,
         deleteChat,
-        clearChats
+        clearChats,
+        deleteMessage
       }}
     >
       {children}

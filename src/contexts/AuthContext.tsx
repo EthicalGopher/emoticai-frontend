@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "../hooks/use-toast"
 
 interface User {
   name: string
