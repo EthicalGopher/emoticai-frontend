@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext";
 import { toast } from "@/components/ui/use-toast";
+import VoiceInput from "./VoiceInput"; // Added import for VoiceInput component
 
 const ChatInput = () => {
   const [message, setMessage] = useState("");
@@ -30,6 +31,10 @@ const ChatInput = () => {
     }
   };
 
+  const handleVoiceTranscript = (transcript) => {
+    setMessage(transcript);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex gap-2 max-w-2xl mx-auto">
@@ -40,9 +45,12 @@ const ChatInput = () => {
           placeholder="Type a message..."
           className="flex-1"
         />
-        <Button type="submit" size="icon">
-          <Send className="h-4 w-4" />
-        </Button>
+        <div className="flex flex-col gap-2"> {/* Added div for vertical stacking */}
+          <VoiceInput onTranscript={handleVoiceTranscript} /> {/* Added VoiceInput component */}
+          <Button type="submit" size="icon">
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </form>
   );

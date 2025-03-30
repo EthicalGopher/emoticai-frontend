@@ -5,6 +5,7 @@ interface User {
   name: string
   createdAt: number
   lastActive: number
+  isGuest?: boolean
 }
 
 interface AuthContextType {
@@ -21,7 +22,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('user')
-    return savedUser ? JSON.parse(savedUser) : null
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser)
+      if (parsedUser.isGuest) {
+        // Don't restore guest users on page load
+        return null
+      }
+      return parsedUser
+    }
+    return null
   })
   const [isGuest, setIsGuest] = useState(false)
 
@@ -36,7 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     cleanupInactiveUsers()
   }, [])
 
-  // Handle guest user cleanup on refresh
+  // Handle guest user cleanup on refresh or navigation
   useEffect(() => {
     if (isGuest) {
       const handleBeforeUnload = () => {
@@ -48,50 +57,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [isGuest])
 
-  const loginAsGuest = () => {
-    const guestUser = { 
-      name: 'Guest',
-      createdAt: Date.now(),
-      lastActive: Date.now()
-    }
-    setUser(guestUser)
-    setIsGuest(true)
-    localStorage.setItem('user', JSON.stringify(guestUser))
-  }
-
   const login = (username: string) => {
     const users = JSON.parse(localStorage.getItem('users') || '[]')
     const existingUser = users.find((u: User) => u.name === username)
     
+    let currentUser: User
+    
     if (!existingUser) {
-      const newUser = {
+      alert('You have created a new account!')
+      currentUser = {
         name: username,
         createdAt: Date.now(),
-        lastActive: Date.now()
+        lastActive: Date.now(),
+        isGuest: false
       }
-      users.push(newUser)
+      users.push(currentUser)
       localStorage.setItem('users', JSON.stringify(users))
-      toast({
-        title: "New Account Created",
-        description: "Welcome! Your account has been created.",
-      })
     } else {
       existingUser.lastActive = Date.now()
+      currentUser = existingUser
       localStorage.setItem('users', JSON.stringify(users))
     }
 
     setIsGuest(false)
-    setUser(existingUser || { name: username, createdAt: Date.now(), lastActive: Date.now() })
-    localStorage.setItem('user', JSON.stringify(user))
+    setUser(currentUser)
+    localStorage.setItem('user', JSON.stringify(currentUser))
+  }
+
+  const loginAsGuest = () => {
+    const guestUser = { 
+      name: 'Guest',
+      createdAt: Date.now(),
+      lastActive: Date.now(),
+      isGuest: true
+    }
+    setUser(guestUser)
+    setIsGuest(true)
+    localStorage.setItem('user', JSON.stringify(guestUser))
+    // Clear any existing guest data
+    localStorage.removeItem('guestData')
   }
 
   const logout = () => {
-    setUser(null)
-    setIsGuest(false)
-    localStorage.removeItem('user')
     if (isGuest) {
       localStorage.removeItem('guestData')
     }
+    localStorage.removeItem('user')
+    setUser(null)
+    setIsGuest(false)
   }
 
   return (

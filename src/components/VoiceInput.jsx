@@ -1,79 +1,73 @@
-"use client"
+
 import React, { useState, useEffect } from "react"
 import { Mic, MicOff } from "lucide-react"
-import { useToast } from "../hooks/use-toast"
+import { Button } from "./ui/button"
 
 const VoiceInput = ({ onTranscript }) => {
   const [isListening, setIsListening] = useState(false)
   const [recognition, setRecognition] = useState(null)
-  const { toast } = useToast()
 
   useEffect(() => {
-    if (window.webkitSpeechRecognition || window.SpeechRecognition) {
-      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition
-      const recognition = new SpeechRecognition()
-      recognition.continuous = true
-      recognition.interimResults = true
-
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0])
-          .map(result => result.transcript)
-          .join('')
+    // Initialize speech recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      const recognitionInstance = new SpeechRecognition()
+      
+      recognitionInstance.continuous = false
+      recognitionInstance.interimResults = false
+      recognitionInstance.lang = 'en-US'
+      
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript
         onTranscript(transcript)
+        setIsListening(false)
       }
-
-      recognition.onerror = (event) => {
+      
+      recognitionInstance.onerror = (event) => {
         console.error('Speech recognition error', event.error)
         setIsListening(false)
-        toast({
-          title: "Error",
-          description: "Failed to recognize speech. Please try again.",
-          variant: "destructive"
-        })
       }
-
-      setRecognition(recognition)
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false)
+      }
+      
+      setRecognition(recognitionInstance)
     }
-  }, [])
+    
+    return () => {
+      if (recognition) {
+        recognition.abort()
+      }
+    }
+  }, [onTranscript])
 
   const toggleListening = () => {
     if (!recognition) {
-      toast({
-        title: "Not Supported",
-        description: "Speech recognition is not supported in your browser.",
-        variant: "destructive"
-      })
+      alert('Speech recognition is not supported in your browser')
       return
     }
-
+    
     if (isListening) {
       recognition.stop()
+      setIsListening(false)
     } else {
       recognition.start()
+      setIsListening(true)
     }
-    setIsListening(!isListening)
   }
 
   return (
-    <button
+    <Button
+      type="button"
+      size="icon"
+      variant="ghost"
+      className={`ml-2 ${isListening ? 'text-red-500' : ''}`}
       onClick={toggleListening}
-      className={`p-2 rounded-full transition-all ${
-        isListening
-          ? "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse"
-          : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
-      }`}
-      title="Voice input"
+      title={isListening ? 'Stop listening' : 'Start voice input'}
     >
-      {isListening ? (
-        <div className="relative">
-          <MicOff size={20} className="animate-pulse" />
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </div>
-      ) : (
-        <Mic size={20} />
-      )}
-    </button>
+      {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+    </Button>
   )
 }
 
