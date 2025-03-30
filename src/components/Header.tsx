@@ -10,7 +10,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   return (
-    <div className="flex justify-between items-center w-full">
+    <div className="flex justify-between items-center w-full  p-6  items-center border-b ">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         >
           <Menu size={16} />
         </Button>
-        <div className="text-xl font-bold text-blue-500 dark:text-blue-400">HelpingAI</div>
+        <div className="text-xl font-bold text-blue-500 dark:text-blue-400">EmoticAi</div>
       </div>
     </div>
   )

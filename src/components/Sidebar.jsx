@@ -47,8 +47,11 @@ const Sidebar = ({ open, onClose }) => {
 
   return (
     <div className="flex h-full flex-col bg-background border-r w-75">
-      <div className="flex items-center justify-between p-4">
-        <h1 className="text-xl font-bold text-primary">HelpingAI</h1>
+      
+      <div className="flex items-center p-4 ">
+        <div className="flex-1">
+          <p className="text-sm font-medium">{getDisplayName()}</p>
+        </div>
         <div className="flex gap-2">
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -56,12 +59,6 @@ const Sidebar = ({ open, onClose }) => {
           <Button variant="ghost" size="icon" className="md:hidden" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
-        </div>
-      </div>
-
-      <div className="flex items-center p-4 border-y">
-        <div className="flex-1">
-          <p className="text-sm font-medium">{getDisplayName()}</p>
         </div>
         <Button variant="ghost" size="icon" onClick={logout}>
           <LogOut className="h-5 w-5" />
