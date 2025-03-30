@@ -1,49 +1,55 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { useChat } from "@/contexts/ChatContext";
 import { toast } from "@/components/ui/use-toast";
 
 const ChatInput = () => {
-  const [message, setMessage] = useState("");
-  const { sendMessage } = useChat();
+  const [input, setInput] = useState("");
+  const { sendMessage, loading } = useChat();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (message.trim()) {
-      await sendMessage(message.trim());
-      setMessage("");
-    } else {
-      toast({
-        title: "Error",
-        description: "Please enter a message",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-        position: "top-center",
-        style: {
-          minWidth: "200px",
-          textAlign: "center"
-        }
-      });
+    if (!input.trim() || loading) return;
+
+    const message = input.trim();
+    setInput("");
+    await sendMessage(message);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex gap-2 max-w-2xl mx-auto">
+    <form onSubmit={handleSubmit} className="p-4 max-w-3xl mx-auto">
+      <div className="flex items-end gap-2">
         <Input
           type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={loading ? "Waiting for response..." : "Type a message..."}
           className="flex-1"
+          disabled={loading}
         />
-        <Button type="submit" size="icon">
-          <Send className="h-4 w-4" />
+        <Button type="submit" size="icon" disabled={!input.trim() || loading}>
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
         </Button>
       </div>
+      {loading && (
+        <div className="text-center text-sm text-muted-foreground mt-2">
+          AI is thinking...
+        </div>
+      )}
     </form>
   );
 };

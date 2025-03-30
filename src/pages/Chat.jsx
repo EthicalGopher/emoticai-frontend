@@ -11,9 +11,30 @@ import { useAuth } from "@/contexts/AuthContext";
 const Chat = () => {
   const { messages, loading } = useChat();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const { user } = useAuth();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  
+  // Simulate page loading
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (pageLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-lg font-medium">Loading your chats...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -29,8 +50,9 @@ const Chat = () => {
                 <ChatMessage key={message.id} message={message} />
               ))}
               {loading && (
-                <div className="flex justify-center">
-                  <div className="animate-pulse text-muted-foreground">AI is thinking...</div>
+                <div className="flex justify-center items-center gap-2 py-4">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                  <div className="text-muted-foreground">AI is thinking...</div>
                 </div>
               )}
             </div>
