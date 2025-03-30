@@ -1,75 +1,32 @@
-import React, { useState, useRef, useEffect } from "react"
-import { Button } from "./ui/button"
-import { Textarea } from "./ui/textarea"
-import { Send, Mic, MicOff, Smile } from "lucide-react"
-import { useChat } from "../contexts/ChatContext"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import React, { useState } from "react";
 
-const EMOJI_LIST = [
-  "😊", "😂", "❤️", "👍", "👋", "🙌", "🎉", "🔥", "✨", "🤔", "👀", "🚀", "💯", "🤖"
-]
+const ChatInput = () => {
+  const [message, setMessage] = useState("");
 
-const ChatInput: React.FC = () => {
-  const [message, setMessage] = useState("")
-  const { sendMessage } = useChat()
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (message.trim()) {
-      sendMessage(message)
-      setMessage("")
+      // Handle message submission
+      setMessage("");
     }
-  }
-
-  const insertEmoji = (emoji: string) => {
-    setMessage(prev => prev + emoji)
-    textareaRef.current?.focus()
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t">
-      <div className="flex items-end gap-2">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" type="button">
-              <Smile className="h-5 w-5" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 grid grid-cols-7 gap-1 p-2">
-            {EMOJI_LIST.map(emoji => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={() => insertEmoji(emoji)}
-                className="hover:bg-muted rounded p-1"
-              >
-                {emoji}
-              </button>
-            ))}
-          </PopoverContent>
-        </Popover>
-
-        <Textarea
-          ref={textareaRef}
+      <div className="flex gap-2">
+        <input
+          type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          className="flex-1 p-2 border rounded"
           placeholder="Type a message..."
-          className="flex-1 min-h-[50px] max-h-[200px]"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              handleSubmit(e)
-            }
-          }}
         />
-
-        <Button type="submit" disabled={!message.trim()}>
-          <Send className="h-5 w-5" />
-        </Button>
+        <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
+          Send
+        </button>
       </div>
     </form>
-  )
-}
+  );
+};
 
-export default ChatInput
+export default ChatInput;
