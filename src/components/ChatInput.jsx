@@ -25,7 +25,13 @@ const ChatInput = ({ onSendMessage, isLoading }) => {
 
   // Handle voice transcript
   const handleVoiceTranscript = (transcript) => {
-    setMessage(prev => prev + (prev ? ' ' : '') + transcript)
+    if (transcript && transcript.trim()) {
+      setMessage(prev => {
+        // If there's existing text, add a space before the transcript
+        const prefix = prev && prev.trim() ? prev.trim() + ' ' : '';
+        return prefix + transcript.trim();
+      });
+    }
   }
 
   return (

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { Mic, MicOff } from 'lucide-react'
 import { Button } from './ui/button'
@@ -31,6 +32,11 @@ const VoiceInput = ({ onTranscript }) => {
           // Stop listening after final result
           recognitionInstance.stop()
           setIsListening(false)
+          
+          toast({
+            title: "Voice Input Completed",
+            description: "Your speech has been converted to text.",
+          })
         }
       }
 
@@ -72,19 +78,25 @@ const VoiceInput = ({ onTranscript }) => {
     if (isListening) {
       recognition.stop()
       setIsListening(false)
+      
+      toast({
+        title: "Voice Input Stopped",
+        description: "Voice recording has been stopped."
+      })
     } else {
       recognition.start()
       setIsListening(true)
 
       toast({
         title: "Voice Input Active",
-        description: "Speak now. Recording will stop when you pause."
+        description: "Speak now. Recording will stop automatically when you pause."
       })
     }
   }
 
   return (
     <Button
+      type="button"
       variant="ghost"
       size="icon"
       className={`rounded-full p-2 ${isListening ? 'bg-red-200 dark:bg-red-800' : ''}`}
