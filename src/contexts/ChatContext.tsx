@@ -95,14 +95,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, [chats])
 
   const createNewChat = () => {
-    const timestamp = new Date().toLocaleString();
+    const chatNumber = chats.length + 1;
     const newChat = {
       id: nanoid(),
-      title: `Chat ${timestamp}`,
+      title: `Chat ${chatNumber}`,
       messages: []
     }
     setChats(prev => [...prev, newChat])
     setCurrentChatId(newChat.id)
+    localStorage.setItem("helpingai_current_chat_id", newChat.id)
   }
 
   const switchChat = (chatId: string) => {
