@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from "react"
@@ -54,7 +53,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const storedChats = localStorage.getItem("helpingai_chats")
     const storedCurrentChatId = localStorage.getItem("helpingai_current_chat_id")
-    
+
     if (storedChats) {
       try {
         const parsedChats = JSON.parse(storedChats)
@@ -96,10 +95,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, [chats])
 
   const createNewChat = () => {
-    const chatCount = chats.length + 1;
+    const timestamp = new Date().toLocaleString();
     const newChat = {
       id: nanoid(),
-      title: `Chat ${chatCount}`,
+      title: `Chat ${timestamp}`,
       messages: []
     }
     setChats(prev => [...prev, newChat])
@@ -135,7 +134,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // Your API call here
       const response = await axios.post("/api/chat", { message: content })
-      
+
       const botMessage: Message = {
         id: nanoid(),
         content: response.data.message,
