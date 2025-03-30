@@ -26,7 +26,7 @@ const Sidebar = ({ open, onClose }) => {
   };
 
   return (
-    <div className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
+    <div className={`fixed inset-0 z-50 w-full md:w-64 transform transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 md:inset-y-0 md:left-0`}>
       <div className="flex h-full flex-col bg-gray-900 text-white">
         <div className="flex items-center justify-between p-4">
           <div className="text-xl font-bold text-blue-400">HelpingAI</div>
