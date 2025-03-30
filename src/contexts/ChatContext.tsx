@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react"
 import axios from "axios"
 import { useToast } from "../hooks/use-toast"
 import { nanoid } from "nanoid"
+import { useAuth } from "./AuthContext"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,12 +51,18 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(false)
   const [isStorageFull, setIsStorageFull] = useState(false)
   const { toast } = useToast()
+  const { user } = useAuth()
+
+  const { user } = useContext(
+    React.createContext({ user: null })
+  ) as { user: { name: string, isGuest: boolean } | null };
 
   useEffect(() => {
     const storedChats = localStorage.getItem("helpingai_chats")
     const storedCurrentChatId = localStorage.getItem("helpingai_current_chat_id")
-
-    if (storedChats) {
+    
+    // Only load stored chats if user is not Guest
+    if (storedChats && (!user || user.name !== "Guest")) {
       try {
         const parsedChats = JSON.parse(storedChats)
         setChats(parsedChats)
@@ -66,26 +73,31 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (error) {
         console.error("Failed to parse stored chats:", error)
+        createNewChat()
       }
     } else {
       createNewChat()
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
-    try {
-      localStorage.setItem("helpingai_chats", JSON.stringify(chats))
-      setIsStorageFull(false)
-    } catch (e) {
-      console.warn("LocalStorage is full:", e)
-      setIsStorageFull(true)
-      toast({
-        title: "Storage Full",
-        description: "Please delete some chats to continue.",
-        variant: "destructive",
-      })
+    // Only save chats to localStorage if user is not Guest
+    if (!user || user.name !== "Guest") {
+      try {
+        localStorage.setItem("helpingai_chats", JSON.stringify(chats))
+        localStorage.setItem("helpingai_current_chat_id", currentChatId)
+        setIsStorageFull(false)
+      } catch (e) {
+        console.warn("LocalStorage is full:", e)
+        setIsStorageFull(true)
+        toast({
+          title: "Storage Full",
+          description: "Please delete some chats to continue.",
+          variant: "destructive",
+        })
+      }
     }
-  }, [chats])
+  }, [chats, currentChatId, user])
 
   const createNewChat = () => {
     const date = new Date()

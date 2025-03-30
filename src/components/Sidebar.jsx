@@ -109,11 +109,11 @@ const Sidebar = ({ open, onClose }) => {
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 opacity-0 group-hover:opacity-100 ${isDeleting === chat.id ? 'animate-pulse' : ''}`}
+              className={`opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 z-10 absolute right-2 ${isDeleting === chat.id ? 'animate-pulse' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 if (window.confirm('Are you sure you want to delete this chat?')) {
-                  clearChat(chat.id);
+                  handleClearChat(chat.id);
                 }
               }}
             >

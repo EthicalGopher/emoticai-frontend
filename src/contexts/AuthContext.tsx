@@ -82,6 +82,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [isGuest]);
 
+  // Load user from localStorage on initial load
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        // Only restore non-guest users
+        if (parsedUser.name !== "Guest") {
+          setUser(parsedUser);
+        } else {
+          // For Guest users, clear localStorage to prevent persistence
+          localStorage.removeItem("user");
+        }
+      } catch (error) {
+        console.error("Failed to parse user from localStorage:", error);
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
+
   return (
     <AuthContext.Provider value={{ user, login, loginAsGuest, logout, isAuthenticated: !!user, isGuest }}>{children}</AuthContext.Provider>
   )
