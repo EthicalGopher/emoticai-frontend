@@ -1,8 +1,20 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { useAuth } from './AuthContext'
-import { toast } from "@/components/ui/use-toast"
+import React, { createContext, useContext, useState, useEffect } from "react"
+import axios from "axios"
+import { useToast } from "../hooks/use-toast"
+import { nanoid } from "nanoid"
+import { useAuth } from "./AuthContext"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog"
 
 export type Message = {
   id: string
@@ -12,162 +24,200 @@ export type Message = {
   chatId: string
 }
 
-export type Chat = {
+type Chat = {
   id: string
   title: string
   messages: Message[]
-  createdAt: number
 }
 
-export interface ChatContextType {
+type ChatContextType = {
   chats: Chat[]
-  activeChat: Chat | null
-  createChat: () => void
-  setActiveChat: (chat: Chat | null) => void
-  addMessage: (message: Message) => void
-  updateChatTitle: (id: string, title: string) => void
-  deleteChat: (id: string) => void
-  clearChats: () => void
-  deleteMessage: (messageId: string) => void
+  currentChatId: string
+  messages: Message[]
+  sendMessage: (content: string) => Promise<void>
+  clearChat: (chatId: string) => void
+  deleteAllChats: () => void
+  loading: boolean
+  deleteMessage: (id: string) => void
+  createNewChat: () => void
+  switchChat: (chatId: string) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user, isGuest } = useAuth()
   const [chats, setChats] = useState<Chat[]>([])
-  const [activeChat, setActiveChat] = useState<Chat | null>(null)
   const [currentChatId, setCurrentChatId] = useState<string>("")
+  const [messages, setMessages] = useState<Message[]>([]) // Added messages state
+  const [loading, setLoading] = useState(false)
+  const [isStorageFull, setIsStorageFull] = useState(false)
+  const { toast } = useToast()
+  const { user, isGuest } = useAuth()
 
-  // Load chats from localStorage based on current user
   useEffect(() => {
-    if (user) {
-      const storageKey = isGuest ? 'guestChats' : `chats_${user.name}`
-      const savedChats = localStorage.getItem(storageKey)
-      if (savedChats) {
-        const parsedChats = JSON.parse(savedChats)
-        setChats(parsedChats)
+    if (!user) return
 
-        // Set the most recent chat as active if it exists
-        if (parsedChats.length > 0) {
-          setActiveChat(parsedChats[0])
-        } else {
-          setActiveChat(null)
-        }
-      } else {
-        setChats([])
-        setActiveChat(null)
+    const storageKey = isGuest ? "guestData" : `userData_${user.name}`
+    const savedData = localStorage.getItem(storageKey)
+
+    if (savedData) {
+      const parsedData = JSON.parse(savedData)
+      if (parsedData.chats) setChats(parsedData.chats)
+      if (parsedData.messages) setMessages(parsedData.messages)
+      if (parsedData.currentChatId) {
+        setCurrentChatId(parsedData.currentChatId)
+      } else if (parsedData.chats && parsedData.chats.length > 0) {
+        setCurrentChatId(parsedData.chats[0].id)
       }
     } else {
-      setChats([])
-      setActiveChat(null)
+      createNewChat()
     }
   }, [user, isGuest])
 
-  // Save chats to localStorage whenever they change
   useEffect(() => {
-    if (user) {
-      const storageKey = isGuest ? 'guestChats' : `chats_${user.name}`
-      localStorage.setItem(storageKey, JSON.stringify(chats))
-    }
-  }, [chats, user, isGuest])
+    if (!user) return
 
-  const createChat = () => {
-    const newChat: Chat = {
-      id: Date.now().toString(),
-      title: 'New Chat',
+    const storageKey = isGuest ? "guestData" : `userData_${user.name}`
+    const userData = {
+      chats,
+      messages,
+      currentChatId
+    }
+
+    localStorage.setItem(storageKey, JSON.stringify(userData))
+  }, [chats, messages, currentChatId, user, isGuest])
+
+  const createNewChat = () => {
+    const date = new Date()
+    const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+    const newChat = {
+      id: nanoid(),
+      title: `Chat - ${formattedDate}`,
       messages: [],
-      createdAt: Date.now()
     }
-
-    setChats(prevChats => [newChat, ...prevChats])
-    setActiveChat(newChat)
+    setChats(prev => [...prev, newChat])
+    setCurrentChatId(newChat.id)
   }
 
-  const addMessage = (message: Message) => {
-    if (!activeChat) return
+  const switchChat = (chatId: string) => {
+    setCurrentChatId(chatId)
+  }
 
-    // Update messages in active chat
-    const updatedChat = {
-      ...activeChat,
-      messages: [...activeChat.messages, message]
+  const messagesForCurrentChat = chats.find(chat => chat.id === currentChatId)?.messages || []
+  setMessages(messagesForCurrentChat); // Update messages state
+
+  const sendMessage = async (content: string) => {
+    if (!content.trim()) return
+
+    const userMessage: Message = {
+      id: nanoid(),
+      content,
+      isUser: true,
+      timestamp: Date.now(),
+      chatId: currentChatId,
     }
 
-    // Update title after first user message if still default
-    let chatWithTitle = updatedChat
-    if (updatedChat.title === 'New Chat' && message.isUser) {
-      // Use first 25 chars of message as title or full message if shorter
-      const newTitle = message.content.length > 25 
-        ? `${message.content.substring(0, 25)}...`
-        : message.content
-
-      chatWithTitle = {
-        ...updatedChat,
-        title: newTitle
-      }
-    }
-
-    // Update active chat
-    setActiveChat(chatWithTitle)
-
-    // Update chats array
-    setChats(prevChats => 
-      prevChats.map(chat => 
-        chat.id === activeChat.id ? chatWithTitle : chat
+    setChats(prev =>
+      prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, messages: [...chat.messages, userMessage] }
+          : chat
       )
     )
-  }
 
-  const updateChatTitle = (id: string, title: string) => {
-    const updatedChats = chats.map(chat => 
-      chat.id === id ? { ...chat, title } : chat
-    )
+    setLoading(true)
 
-    setChats(updatedChats)
+    try {
+      const response = await axios.post("/api/chat", { message: content })
 
-    if (activeChat && activeChat.id === id) {
-      setActiveChat({ ...activeChat, title })
+      const botMessage: Message = {
+        id: nanoid(),
+        content: response.data.message,
+        isUser: false,
+        timestamp: Date.now(),
+        chatId: currentChatId,
+      }
+
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === currentChatId
+            ? { ...chat, messages: [...chat.messages, botMessage] }
+            : chat
+        )
+      )
+
+      if (messagesForCurrentChat.length === 0) {
+        setChats(prev =>
+          prev.map(chat =>
+            chat.id === currentChatId
+              ? { ...chat, title: content.slice(0, 10) + (content.length > 10 ? "..." : "") }
+              : chat
+          )
+        )
+      }
+    } catch (error) {
+      console.error("Error sending message:", error)
+      const errorMessage: Message = {
+        id: nanoid(),
+        content: "Sorry, there was an error processing your message.",
+        isUser: false,
+        timestamp: Date.now(),
+        chatId: currentChatId,
+      }
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === currentChatId
+            ? { ...chat, messages: [...chat.messages, errorMessage] }
+            : chat
+        )
+      )
+    } finally {
+      setLoading(false)
     }
   }
 
-  const deleteChat = (id: string) => {
-    const updatedChats = chats.filter((chat) => chat.id !== id)
-    setChats(updatedChats)
+  const clearChat = (chatId: string) => {
+    const chatIdToDelete = chatId || currentChatId
 
-    // Save updated chats to localStorage
-    if (user) {
-      const storageKey = isGuest ? 'guestChats' : `chats_${user.name}`
-      localStorage.setItem(storageKey, JSON.stringify(updatedChats))
+    // Remove chat from chats
+    setChats(prevChats => prevChats.filter(chat => chat.id !== chatIdToDelete))
+
+    // Update current chat ID if we're deleting the current one
+    if (chatIdToDelete === currentChatId) {
+      const remainingChats = chats.filter(chat => chat.id !== chatIdToDelete)
+      if (remainingChats.length > 0) {
+        setCurrentChatId(remainingChats[0].id)
+      } else {
+        // This was the last chat, create a new one
+        createNewChat()
+      }
     }
-
-    // Update active chat if the deleted chat was active
-    if (activeChat && activeChat.id === id) {
-      setActiveChat(updatedChats.length > 0 ? updatedChats[0] : null)
-    }
-
-    // Confirm deletion with toast
     toast({
       title: "Chat deleted",
-      description: "The chat has been permanently removed.",
-      variant: "destructive"
-    });
+      description: "The selected chat has been removed.",
+    })
   }
 
-  const clearChats = () => {
-    setChats([])
-    setActiveChat(null)
-
-    if (user) {
-      const storageKey = isGuest ? 'guestChats' : `chats_${user.name}`
-      localStorage.removeItem(storageKey)
+  const deleteAllChats = () => {
+    const initialChat = {
+      id: nanoid(),
+      title: "New Chat",
+      messages: [],
     }
+    setChats([initialChat])
+    setCurrentChatId(initialChat.id)
+    setMessages([]); // Clear messages
+    toast({
+      title: "All chats deleted",
+      description: "All chat history has been cleared.",
+    })
   }
 
   const deleteMessage = (messageId: string) => {
-    setChats((prevChats) =>
-      prevChats.map((chat) =>
+    setChats(prev =>
+      prev.map(chat =>
         chat.id === currentChatId
-          ? { ...chat, messages: chat.messages.filter((msg) => msg.id !== messageId) }
+          ? { ...chat, messages: chat.messages.filter(msg => msg.id !== messageId) }
           : chat
       )
     )
@@ -177,14 +227,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     <ChatContext.Provider
       value={{
         chats,
-        activeChat,
-        createChat,
-        setActiveChat,
-        addMessage,
-        updateChatTitle,
-        deleteChat,
-        clearChats,
-        deleteMessage
+        currentChatId,
+        messages,
+        sendMessage,
+        clearChat,
+        deleteAllChats,
+        loading,
+        deleteMessage,
+        createNewChat,
+        switchChat,
       }}
     >
       {children}
@@ -194,8 +245,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useChat = () => {
   const context = useContext(ChatContext)
-  if (!context) {
-    throw new Error('useChat must be used within a ChatProvider')
+  if (context === undefined) {
+    throw new Error("useChat must be used within a ChatProvider")
   }
   return context
 }

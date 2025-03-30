@@ -6,11 +6,6 @@ import { MoreHorizontal, Trash, Copy, Share } from "lucide-react"
 import { useChat } from "../contexts/ChatContext"
 import { useToast } from "../hooks/use-toast"
 
-export interface ChatContextType {
-  // Other properties
-  deleteMessage: (messageId: string) => void;
-}
-
 interface MessageActionsProps {
   messageId: string
   content: string
