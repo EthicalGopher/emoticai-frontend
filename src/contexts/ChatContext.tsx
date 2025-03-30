@@ -35,6 +35,7 @@ type ChatContextType = {
   messages: Message[]
   sendMessage: (content: string) => Promise<void>
   clearChat: (chatId: string) => void
+  deleteAllChats: () => void
   loading: boolean
   deleteMessage: (id: string) => void
   createNewChat: () => void
@@ -67,15 +68,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         console.error("Failed to parse stored chats:", error)
       }
     } else {
-      const initialChat = {
-        id: nanoid(),
-        title: "New Chat",
-        messages: []
-      }
-      setChats([initialChat])
-      setCurrentChatId(initialChat.id)
-      localStorage.setItem("helpingai_chats", JSON.stringify([initialChat]))
-      localStorage.setItem("helpingai_current_chat_id", initialChat.id)
+      createNewChat()
     }
   }, [])
 
@@ -89,18 +82,18 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       toast({
         title: "Storage Full",
         description: "Please delete some chats to continue.",
-        variant: "destructive"
+        variant: "destructive",
       })
     }
   }, [chats])
 
   const createNewChat = () => {
-    const date = new Date();
-    const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+    const date = new Date()
+    const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
     const newChat = {
       id: nanoid(),
       title: `Chat - ${formattedDate}`,
-      messages: []
+      messages: [],
     }
     setChats(prev => [...prev, newChat])
     setCurrentChatId(newChat.id)
@@ -122,19 +115,20 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       content,
       isUser: true,
       timestamp: Date.now(),
-      chatId: currentChatId
+      chatId: currentChatId,
     }
 
-    setChats(prev => prev.map(chat => 
-      chat.id === currentChatId 
-        ? { ...chat, messages: [...chat.messages, userMessage] }
-        : chat
-    ))
+    setChats(prev =>
+      prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, messages: [...chat.messages, userMessage] }
+          : chat
+      )
+    )
 
     setLoading(true)
 
     try {
-      // Your API call here
       const response = await axios.post("/api/chat", { message: content })
 
       const botMessage: Message = {
@@ -142,22 +136,25 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         content: response.data.message,
         isUser: false,
         timestamp: Date.now(),
-        chatId: currentChatId
+        chatId: currentChatId,
       }
 
-      setChats(prev => prev.map(chat => 
-        chat.id === currentChatId 
-          ? { ...chat, messages: [...chat.messages, botMessage] }
-          : chat
-      ))
-
-      // Update chat title if it's the first message
-      if (messages.length === 0) {
-        setChats(prev => prev.map(chat => 
-          chat.id === currentChatId 
-            ? { ...chat, title: content.slice(0, 10) + (content.length > 10 ? "..." : "") }
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === currentChatId
+            ? { ...chat, messages: [...chat.messages, botMessage] }
             : chat
-        ))
+        )
+      )
+
+      if (messages.length === 0) {
+        setChats(prev =>
+          prev.map(chat =>
+            chat.id === currentChatId
+              ? { ...chat, title: content.slice(0, 10) + (content.length > 10 ? "..." : "") }
+              : chat
+          )
+        )
       }
     } catch (error) {
       console.error("Error sending message:", error)
@@ -166,13 +163,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         content: "Sorry, there was an error processing your message.",
         isUser: false,
         timestamp: Date.now(),
-        chatId: currentChatId
+        chatId: currentChatId,
       }
-      setChats(prev => prev.map(chat => 
-        chat.id === currentChatId 
-          ? { ...chat, messages: [...chat.messages, errorMessage] }
-          : chat
-      ))
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === currentChatId
+            ? { ...chat, messages: [...chat.messages, errorMessage] }
+            : chat
+        )
+      )
     } finally {
       setLoading(false)
     }
@@ -198,10 +197,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     const initialChat = {
       id: nanoid(),
       title: "New Chat",
-      messages: []
+      messages: [],
     }
     setChats([initialChat])
     setCurrentChatId(initialChat.id)
+    localStorage.setItem("helpingai_chats", JSON.stringify([initialChat]))
+    localStorage.setItem("helpingai_current_chat_id", initialChat.id)
     toast({
       title: "All chats deleted",
       description: "All chat history has been cleared.",
@@ -209,26 +210,28 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const deleteMessage = (messageId: string) => {
-    setChats(prev => prev.map(chat => 
-      chat.id === currentChatId 
-        ? { ...chat, messages: chat.messages.filter(msg => msg.id !== messageId) }
-        : chat
-    ))
+    setChats(prev =>
+      prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, messages: chat.messages.filter(msg => msg.id !== messageId) }
+          : chat
+      )
+    )
   }
 
   return (
-    <ChatContext.Provider 
-      value={{ 
-        chats, 
-        currentChatId, 
-        messages, 
-        sendMessage, 
-        clearChat, 
-        loading, 
+    <ChatContext.Provider
+      value={{
+        chats,
+        currentChatId,
+        messages,
+        sendMessage,
+        clearChat,
+        deleteAllChats,
+        loading,
         deleteMessage,
         createNewChat,
         switchChat,
-        deleteAllChats
       }}
     >
       {children}

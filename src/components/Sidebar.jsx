@@ -46,7 +46,7 @@ const Sidebar = ({ open, onClose }) => {
   };
 
   return (
-    <div className="flex h-full flex-col bg-background border-r">
+    <div className="flex h-full flex-col bg-background border-r w-75">
       <div className="flex items-center justify-between p-4">
         <h1 className="text-xl font-bold text-primary">HelpingAI</h1>
         <div className="flex gap-2">
@@ -101,11 +101,11 @@ const Sidebar = ({ open, onClose }) => {
             className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer ${
               chat.id === currentChatId
                 ? "bg-primary/10 text-primary"
-                : "hover:bg-muted"
+                : "hover:bg-blue-200 hover:text-black"
             }`}
             onClick={() => switchChat(chat.id)}
           >
-            <span className="flex-1 truncate">{chat.title || "New Chat"}</span>
+            <span className="flex-1 truncate">{chat.title || ""}</span>
             <Button
               variant="ghost"
               size="icon"

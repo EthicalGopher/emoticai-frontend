@@ -22,7 +22,7 @@ const Login = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white dark:bg-helpingai-darkBg text-gray-900 dark:text-gray-100">
+    <div className="flex min-h-screen flex-col bg-background text-gray-900 dark:text-gray-100">
       <div className="absolute top-4 right-4">
         <Button
           variant="ghost"
