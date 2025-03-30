@@ -30,7 +30,7 @@ const ChatMessage = ({ message }) => {
         clearInterval(interval);
         setIsTyping(false);
       }
-    }, 15); // Adjust speed here
+    }, 10); // Slightly faster typing speed
 
     return () => clearInterval(interval);
   }, [message.content, isUser]);
