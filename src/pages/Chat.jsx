@@ -1,20 +1,18 @@
 "use client"
 
-import React from "react"
-import { useRef, useEffect, useState } from "react"
-import Header from "../components/Header"
+import React, { useEffect, useRef, useState } from "react"
+import { useChat } from "../contexts/ChatContext"
+import { Sidebar } from "../components/Sidebar"
+import { Header } from "../components/Header"
 import ChatInput from "../components/ChatInput"
 import ChatMessage from "../components/ChatMessage"
-import Sidebar from "../components/Sidebar"
-import { useChat } from "../contexts/ChatContext"
 import { ScrollArea } from "../components/ui/scroll-area"
 
-const Chat = () => {
+const Chat: React.FC = () => {
   const { messages, loading } = useChat()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
@@ -25,7 +23,6 @@ const Chat = () => {
 
   return (
     <div className="flex h-screen bg-white dark:bg-helpingai-darkBg text-gray-900 dark:text-gray-100">
-      {/* Sidebar - hidden on mobile by default */}
       <div
         className={`fixed inset-y-0 left-0 z-50 md:relative md:z-0 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -34,7 +31,6 @@ const Chat = () => {
         <Sidebar />
       </div>
 
-      {/* Overlay for mobile */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -112,4 +108,3 @@ const Chat = () => {
 }
 
 export default Chat
-
