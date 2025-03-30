@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useChat } from "@/contexts/ChatContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,21 @@ const Sidebar = ({ open, onClose }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { clearChat, messages, chats, currentChatId, switchChat, createNewChat } = useChat();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (!user) {
+        localStorage.clear();
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [user]);
+
+
+  const getDisplayName = () => {
+    return user?.name || 'Guest';
+  };
 
   return (
     <div className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
@@ -22,7 +37,7 @@ const Sidebar = ({ open, onClose }) => {
 
         <div className="flex items-center p-4 border-b border-gray-800">
           <div className="flex-1">
-            <p className="text-sm font-medium">{user?.name || 'Guest'}</p>
+            <p className="text-sm font-medium">{getDisplayName()}</p>
           </div>
           <Button variant="ghost" size="icon" onClick={logout}>
             <LogOut className="h-5 w-5" />

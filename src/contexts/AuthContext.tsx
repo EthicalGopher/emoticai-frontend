@@ -24,8 +24,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const storedUser = localStorage.getItem("helpingai_user")
     if (storedUser) {
       setUser(JSON.parse(storedUser))
+    } else {
+      // Clear localStorage if not logged in
+      localStorage.clear()
     }
   }, [])
+
+  const getDisplayName = () => {
+    return user ? user.username : "Guest"
+  }
 
   const login = (username: string) => {
     const newUser = { username }
@@ -39,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, getDisplayName }}>{children}</AuthContext.Provider>
   )
 }
 
