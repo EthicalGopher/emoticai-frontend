@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect } from "react"
 import axios from "axios"
 import { useToast } from "../hooks/use-toast"
 import { nanoid } from "nanoid"
-import { useAuth } from "./AuthContext"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,44 +47,45 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined)
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [chats, setChats] = useState<Chat[]>([])
   const [currentChatId, setCurrentChatId] = useState<string>("")
-  const [messages, setMessages] = useState<Message[]>([]) // Added messages state
   const [loading, setLoading] = useState(false)
   const [isStorageFull, setIsStorageFull] = useState(false)
   const { toast } = useToast()
-  const { user, isGuest } = useAuth()
 
   useEffect(() => {
-    if (!user) return
+    const storedChats = localStorage.getItem("helpingai_chats")
+    const storedCurrentChatId = localStorage.getItem("helpingai_current_chat_id")
 
-    const storageKey = isGuest ? "guestData" : `userData_${user.name}`
-    const savedData = localStorage.getItem(storageKey)
-
-    if (savedData) {
-      const parsedData = JSON.parse(savedData)
-      if (parsedData.chats) setChats(parsedData.chats)
-      if (parsedData.messages) setMessages(parsedData.messages)
-      if (parsedData.currentChatId) {
-        setCurrentChatId(parsedData.currentChatId)
-      } else if (parsedData.chats && parsedData.chats.length > 0) {
-        setCurrentChatId(parsedData.chats[0].id)
+    if (storedChats) {
+      try {
+        const parsedChats = JSON.parse(storedChats)
+        setChats(parsedChats)
+        if (storedCurrentChatId && parsedChats.some(chat => chat.id === storedCurrentChatId)) {
+          setCurrentChatId(storedCurrentChatId)
+        } else if (parsedChats.length > 0) {
+          setCurrentChatId(parsedChats[0].id)
+        }
+      } catch (error) {
+        console.error("Failed to parse stored chats:", error)
       }
     } else {
       createNewChat()
     }
-  }, [user, isGuest])
+  }, [])
 
   useEffect(() => {
-    if (!user) return
-
-    const storageKey = isGuest ? "guestData" : `userData_${user.name}`
-    const userData = {
-      chats,
-      messages,
-      currentChatId
+    try {
+      localStorage.setItem("helpingai_chats", JSON.stringify(chats))
+      setIsStorageFull(false)
+    } catch (e) {
+      console.warn("LocalStorage is full:", e)
+      setIsStorageFull(true)
+      toast({
+        title: "Storage Full",
+        description: "Please delete some chats to continue.",
+        variant: "destructive",
+      })
     }
-
-    localStorage.setItem(storageKey, JSON.stringify(userData))
-  }, [chats, messages, currentChatId, user, isGuest])
+  }, [chats])
 
   const createNewChat = () => {
     const date = new Date()
@@ -97,14 +97,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setChats(prev => [...prev, newChat])
     setCurrentChatId(newChat.id)
+    localStorage.setItem("helpingai_current_chat_id", newChat.id)
   }
 
   const switchChat = (chatId: string) => {
     setCurrentChatId(chatId)
+    localStorage.setItem("helpingai_current_chat_id", chatId)
   }
 
-  const messagesForCurrentChat = chats.find(chat => chat.id === currentChatId)?.messages || []
-  setMessages(messagesForCurrentChat); // Update messages state
+  const messages = chats.find(chat => chat.id === currentChatId)?.messages || []
 
   const sendMessage = async (content: string) => {
     if (!content.trim()) return
@@ -146,7 +147,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         )
       )
 
-      if (messagesForCurrentChat.length === 0) {
+      if (messages.length === 0) {
         setChats(prev =>
           prev.map(chat =>
             chat.id === currentChatId
@@ -177,18 +178,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const clearChat = (chatId: string) => {
-    const chatIdToDelete = chatId || currentChatId
-
-    // Remove chat from chats
-    setChats(prevChats => prevChats.filter(chat => chat.id !== chatIdToDelete))
-
-    // Update current chat ID if we're deleting the current one
-    if (chatIdToDelete === currentChatId) {
-      const remainingChats = chats.filter(chat => chat.id !== chatIdToDelete)
+    setChats(prev => prev.filter(chat => chat.id !== chatId))
+    if (currentChatId === chatId) {
+      const remainingChats = chats.filter(chat => chat.id !== chatId)
       if (remainingChats.length > 0) {
         setCurrentChatId(remainingChats[0].id)
       } else {
-        // This was the last chat, create a new one
         createNewChat()
       }
     }
@@ -206,7 +201,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setChats([initialChat])
     setCurrentChatId(initialChat.id)
-    setMessages([]); // Clear messages
+    localStorage.setItem("helpingai_chats", JSON.stringify([initialChat]))
+    localStorage.setItem("helpingai_current_chat_id", initialChat.id)
     toast({
       title: "All chats deleted",
       description: "All chat history has been cleared.",
