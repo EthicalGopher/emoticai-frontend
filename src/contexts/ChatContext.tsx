@@ -53,19 +53,21 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const storedChats = localStorage.getItem("helpingai_chats")
+    const storedCurrentChatId = localStorage.getItem("helpingai_current_chat_id")
+    
     if (storedChats) {
       try {
         const parsedChats = JSON.parse(storedChats)
         setChats(parsedChats)
-        if (parsedChats.length > 0) {
+        if (storedCurrentChatId && parsedChats.some(chat => chat.id === storedCurrentChatId)) {
+          setCurrentChatId(storedCurrentChatId)
+        } else if (parsedChats.length > 0) {
           setCurrentChatId(parsedChats[0].id)
         }
       } catch (error) {
         console.error("Failed to parse stored chats:", error)
-        localStorage.removeItem("helpingai_chats")
       }
     } else {
-      // Create initial chat
       const initialChat = {
         id: nanoid(),
         title: "New Chat",
@@ -73,6 +75,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setChats([initialChat])
       setCurrentChatId(initialChat.id)
+      localStorage.setItem("helpingai_chats", JSON.stringify([initialChat]))
+      localStorage.setItem("helpingai_current_chat_id", initialChat.id)
     }
   }, [])
 
@@ -103,6 +107,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   const switchChat = (chatId: string) => {
     setCurrentChatId(chatId)
+    localStorage.setItem("helpingai_current_chat_id", chatId)
   }
 
   const messages = chats.find(chat => chat.id === currentChatId)?.messages || []
