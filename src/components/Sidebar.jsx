@@ -35,19 +35,14 @@ const Sidebar = ({ open, onClose }) => {
 
   const handleClearChat = (chatId) => {
     setIsDeleting(chatId); //Added for delete feedback
-    setTimeout(() => {
-      clearChat(chatId);
-      setIsDeleting(null); //Added for delete feedback
+    clearChat(chatId);
+    setTimeout(() => setIsDeleting(null), 500); //Added for delete feedback
 
-      if (window.innerWidth < 768) {
-        onClose();
-      }
-    }, 500); // Simulate delete delay
   };
 
   return (
     <div className="flex h-full flex-col bg-background border-r w-75">
-      
+
       <div className="flex items-center p-4 ">
         <div className="flex-1">
           <p className="text-sm font-medium">{getDisplayName()}</p>
@@ -106,7 +101,7 @@ const Sidebar = ({ open, onClose }) => {
             <Button
               variant="ghost"
               size="icon"
-              className={`opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 z-10 absolute right-2 ${isDeleting === chat.id ? 'animate-pulse' : ''}`}
+              className={`h-6 w-6 z-10 absolute right-2 ${isDeleting === chat.id ? 'animate-pulse' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 if (window.confirm('Are you sure you want to delete this chat?')) {
