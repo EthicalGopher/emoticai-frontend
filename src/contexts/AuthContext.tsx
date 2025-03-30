@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Save user to localStorage whenever it changes
   useEffect(() => {
     if (user) {
-      // Only save non-guest users to localStorage
+      // Only save non-guest users to localStorage for persistence
       if (!user.isGuest) {
         localStorage.setItem("user", JSON.stringify(user));
       }
@@ -63,6 +63,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.removeItem("user");
     }
   }, [user]);
+
+// Load user from localStorage on initial load
+useEffect(() => {
+  const savedUser = localStorage.getItem("user");
+  if (savedUser) {
+    try {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+    } catch (error) {
+      console.error("Failed to parse user from localStorage:", error);
+      localStorage.removeItem("user");
+    }
+  }
+}, []);
 
 
   // Clean up inactive users (10 days)

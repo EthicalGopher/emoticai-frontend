@@ -112,7 +112,7 @@ const SidebarContent = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (confirm('Are you sure you want to delete this chat?')) {
