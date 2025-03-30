@@ -1,112 +1,58 @@
 "use client"
-import React from "react"
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Mic, MicOff } from "lucide-react"
 import { useToast } from "../hooks/use-toast"
 
-import { SpeechRecognition } from "react-speech-recognition"
-
-
-
 const VoiceInput = ({ onTranscript }) => {
   const [isListening, setIsListening] = useState(false)
-  const [transcript, setTranscript] = useState("")
-  const [isSupported, setIsSupported] = useState(true)
+  const [recognition, setRecognition] = useState(null)
   const { toast } = useToast()
-  const recognitionRef = React.useRef<SpeechRecognition | null>(null)
 
   useEffect(() => {
-    // Check if Web Speech API is supported
-    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
-      setIsSupported(false)
-      toast({
-        title: "Voice Input Not Supported",
-        description: "Your browser does not support voice input.",
-        variant: "destructive",
-      })
-    }
-  }, [toast])
+    if (window.webkitSpeechRecognition || window.SpeechRecognition) {
+      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition
+      const recognition = new SpeechRecognition()
+      recognition.continuous = true
+      recognition.interimResults = true
 
-  useEffect(() => {
-    // Cleanup recognition instance on component unmount
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop()
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('')
+        onTranscript(transcript)
       }
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error', event.error)
+        setIsListening(false)
+        toast({
+          title: "Error",
+          description: "Failed to recognize speech. Please try again.",
+          variant: "destructive"
+        })
+      }
+
+      setRecognition(recognition)
     }
   }, [])
 
   const toggleListening = () => {
-    if (!isSupported) {
+    if (!recognition) {
       toast({
         title: "Not Supported",
-        description: "Voice input is not supported in your browser.",
-        variant: "destructive",
+        description: "Speech recognition is not supported in your browser.",
+        variant: "destructive"
       })
       return
     }
 
     if (isListening) {
-      stopListening()
+      recognition.stop()
     } else {
-      startListening()
+      recognition.start()
     }
-  }
-
-  const startListening = () => {
-    setIsListening(true)
-
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition
-    const recognition = new SpeechRecognition()
-
-    recognition.lang = "en-US"
-    recognition.continuous = true
-    recognition.interimResults = true
-
-    recognition.onresult = (event) => {
-      const current = Array.from(event.results)
-        .map((result) => result[0].transcript)
-        .join("")
-
-      setTranscript(current)
-    }
-
-    recognition.onerror = (event) => {
-      toast({
-        title: "Error",
-        description: `Voice recognition error: ${event.error}`,
-        variant: "destructive",
-      })
-      setIsListening(false)
-    }
-
-    recognition.onend = () => {
-      setIsListening(false)
-      if (transcript) {
-        onTranscript(transcript)
-        setTranscript("")
-      }
-    }
-
-    recognition.start()
-    recognitionRef.current = recognition
-
-    toast({
-      title: "Listening",
-      description: "Speak now...",
-    })
-  }
-
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop()
-      if (transcript) {
-        onTranscript(transcript)
-        setTranscript("")
-      }
-    }
-    setIsListening(false)
+    setIsListening(!isListening)
   }
 
   return (
@@ -117,9 +63,7 @@ const VoiceInput = ({ onTranscript }) => {
           ? "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse"
           : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
       }`}
-      disabled={!isSupported}
-      title={isSupported ? "Voice input" : "Voice input not supported"}
-      aria-label={isSupported ? "Voice input" : "Voice input not supported"}
+      title="Voice input"
     >
       {isListening ? (
         <div className="relative">
@@ -134,4 +78,3 @@ const VoiceInput = ({ onTranscript }) => {
 }
 
 export default VoiceInput
-
