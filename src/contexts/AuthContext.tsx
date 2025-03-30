@@ -2,51 +2,88 @@
 
 import React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { toast } from 'react-hot-toast';
 
 type User = {
-  username: string
+  name: string
 }
 
 type AuthContextType = {
   user: User | null
   login: (username: string) => void
+  loginAsGuest: () => void
   logout: () => void
   isAuthenticated: boolean
+  isGuest: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('user')
+    return savedUser ? JSON.parse(savedUser) : null
+  })
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem("helpingai_user")
+    // Check if user is logged in from localStorage.  This is redundant with the useState above but kept for completeness
+    const storedUser = localStorage.getItem("helpingai_user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser))
+      setUser(JSON.parse(storedUser));
     } else {
-      // Clear localStorage if not logged in
-      localStorage.clear()
+      localStorage.clear();
     }
-  }, [])
+  }, []);
 
   const getDisplayName = () => {
-    return user ? user.username : "Guest"
+    return user ? user.name : "Guest"
   }
 
-  const login = (username: string) => {
-    const newUser = { username }
-    setUser(newUser)
-    localStorage.setItem("helpingai_user", JSON.stringify(newUser))
+  const loginAsGuest = () => {
+    setIsGuest(true);
+    setUser({ name: 'Guest' });
+    localStorage.setItem('user', JSON.stringify({name: 'Guest'})); //Store guest user
+  }
+
+  const login = async (username: string) => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      const oldUser = JSON.parse(savedUser);
+      if (oldUser.name !== username) {
+        toast({
+          title: "New Account Created",
+          description: "Your data has been reset for the new account.",
+        });
+        localStorage.clear();
+      }
+    }
+
+    setIsGuest(false);
+    const newUser = { name: username };
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
   }
 
   const logout = () => {
-    setUser(null)
-    localStorage.removeItem("helpingai_user")
+    setUser(null);
+    localStorage.removeItem("user");
+    setIsGuest(false); // added to reset guest status on logout
   }
 
+  useEffect(() => {
+    if (isGuest) {
+      window.addEventListener('beforeunload', () => {
+        localStorage.clear();
+      });
+    }
+    return () => {
+      window.removeEventListener('beforeunload', () => localStorage.clear())
+    }
+  }, [isGuest]);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, loginAsGuest, logout, isAuthenticated: !!user, isGuest }}>{children}</AuthContext.Provider>
   )
 }
 
@@ -57,4 +94,3 @@ export const useAuth = () => {
   }
   return context
 }
-
