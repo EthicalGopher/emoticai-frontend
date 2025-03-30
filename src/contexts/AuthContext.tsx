@@ -51,10 +51,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (savedUser) {
       const oldUser = JSON.parse(savedUser);
       if (oldUser.name !== username) {
-        toast({
-          title: "New Account Created",
-          description: "Your data has been reset for the new account.",
-        });
+        toast(
+          "New Account Created. Your data has been reset for the new account.",
+        );
         localStorage.clear();
       }
     }

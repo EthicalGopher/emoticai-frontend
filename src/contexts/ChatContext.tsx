@@ -53,10 +53,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast()
   const { user } = useAuth()
 
-  const { user } = useContext(
-    React.createContext({ user: null })
-  ) as { user: { name: string, isGuest: boolean } | null };
-
+  // Removed redundant redeclaration of
   useEffect(() => {
     const storedChats = localStorage.getItem("helpingai_chats")
     const storedCurrentChatId = localStorage.getItem("helpingai_current_chat_id")
