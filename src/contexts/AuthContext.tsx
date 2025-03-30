@@ -11,10 +11,8 @@ type User = {
 type AuthContextType = {
   user: User | null
   login: (username: string) => void
-  loginAsGuest: () => void
   logout: () => void
   isAuthenticated: boolean
-  isGuest: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -24,26 +22,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const savedUser = localStorage.getItem('user')
     return savedUser ? JSON.parse(savedUser) : null
   })
-  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in from localStorage.  This is redundant with the useState above but kept for completeness
     const storedUser = localStorage.getItem("helpingai_user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
-    } else {
-      localStorage.clear();
     }
   }, []);
 
   const getDisplayName = () => {
-    return user ? user.name : "Guest"
-  }
-
-  const loginAsGuest = () => {
-    setIsGuest(true);
-    setUser({ name: 'Guest' });
-    localStorage.setItem('user', JSON.stringify({name: 'Guest'})); //Store guest user
+    return user ? user.name : ""
   }
 
   const login = async (username: string) => {
@@ -59,7 +48,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    setIsGuest(false);
     const newUser = { name: username };
     setUser(newUser);
     localStorage.setItem('user', JSON.stringify(newUser));
@@ -68,42 +56,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    setIsGuest(false); // added to reset guest status on logout
   }
 
-  useEffect(() => {
-    if (isGuest) {
-      window.addEventListener('beforeunload', () => {
-        localStorage.clear();
-      });
-    }
-    return () => {
-      window.removeEventListener('beforeunload', () => localStorage.clear())
-    }
-  }, [isGuest]);
-
-  // Load user from localStorage on initial load
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        // Only restore non-guest users
-        if (parsedUser.name !== "Guest") {
-          setUser(parsedUser);
-        } else {
-          // For Guest users, clear localStorage to prevent persistence
-          localStorage.removeItem("user");
-        }
-      } catch (error) {
-        console.error("Failed to parse user from localStorage:", error);
-        localStorage.removeItem("user");
-      }
-    }
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ user, login, loginAsGuest, logout, isAuthenticated: !!user, isGuest }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>{children}</AuthContext.Provider>
   )
 }
 

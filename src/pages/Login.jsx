@@ -10,7 +10,7 @@ import { Moon, Sun } from "lucide-react"
 
 const Login = () => {
   const [username, setUsername] = useState("")
-  const { login, logout, isGuest, setIsGuest, currentUser, setCurrentUser } = useAuth() // Added logout and guest handling
+  const { login } = useAuth()
   const { isDarkMode, toggleTheme } = useTheme()
   const [chats, setChats] = useState([]);
 
@@ -18,29 +18,12 @@ const Login = () => {
     e.preventDefault()
     if (username.trim()) {
       login(username)
-      if(currentUser.name !== username){
-        alert("New account created. Previous data will be replaced.")
-      }
     }
-  }
-
-  const loginAsGuest = () => {
-    login("Guest");
-    setIsGuest(true);
   }
 
   const handleCloseChat = (index) => {
     setChats(chats.filter((_, i) => i !== index));
   };
-
-  useEffect(() => {
-    //Cleanup on unmount or change of user
-    return () => {
-      if(isGuest) {
-        logout();
-      }
-    };
-  }, [isGuest, logout]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-gray-900 dark:text-gray-100">
@@ -73,14 +56,7 @@ const Login = () => {
               />
             </div>
             <Button className="w-full mb-2" onClick={handleLogin}>
-              Login with Name
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => loginAsGuest()}
-            >
-              Login as Guest
+              Login
             </Button>
           </form>
           <div>

@@ -53,16 +53,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast()
   const { user } = useAuth()
 
-  const { user } = useContext(
-    React.createContext({ user: null })
-  ) as { user: { name: string, isGuest: boolean } | null };
-
   useEffect(() => {
     const storedChats = localStorage.getItem("helpingai_chats")
     const storedCurrentChatId = localStorage.getItem("helpingai_current_chat_id")
     
-    // Only load stored chats if user is not Guest
-    if (storedChats && (!user || user.name !== "Guest")) {
+    if (storedChats) {
       try {
         const parsedChats = JSON.parse(storedChats)
         setChats(parsedChats)
@@ -81,23 +76,20 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user])
 
   useEffect(() => {
-    // Only save chats to localStorage if user is not Guest
-    if (!user || user.name !== "Guest") {
-      try {
-        localStorage.setItem("helpingai_chats", JSON.stringify(chats))
-        localStorage.setItem("helpingai_current_chat_id", currentChatId)
-        setIsStorageFull(false)
-      } catch (e) {
-        console.warn("LocalStorage is full:", e)
-        setIsStorageFull(true)
-        toast({
-          title: "Storage Full",
-          description: "Please delete some chats to continue.",
-          variant: "destructive",
-        })
-      }
+    try {
+      localStorage.setItem("helpingai_chats", JSON.stringify(chats))
+      localStorage.setItem("helpingai_current_chat_id", currentChatId)
+      setIsStorageFull(false)
+    } catch (e) {
+      console.warn("LocalStorage is full:", e)
+      setIsStorageFull(true)
+      toast({
+        title: "Storage Full",
+        description: "Please delete some chats to continue.",
+        variant: "destructive",
+      })
     }
-  }, [chats, currentChatId, user])
+  }, [chats, currentChatId])
 
   const createNewChat = () => {
     const date = new Date()
