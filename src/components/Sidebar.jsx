@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { useChat } from "@/contexts/ChatContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Plus, Trash2, Moon, Sun } from "lucide-react";
+// useAuth hook is missing from original code and cannot be implemented.
 
 const Sidebar = ({ open, onClose }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { clearChat, messages } = useChat();
+  //const { user, logout } = useAuth(); // useAuth hook is missing from original code
   const [chats, setChats] = useState([{ id: "1", title: "Current Chat", timestamp: Date.now() }]);
   const [activeChat, setActiveChat] = useState("1");
 
@@ -27,7 +29,7 @@ const Sidebar = ({ open, onClose }) => {
   };
 
   return (
-    <div className="w-64 h-screen bg-gray-900 border-r border-gray-800 flex flex-col">
+    <div className={`w-full md:w-64 h-screen bg-background border-r flex flex-col ${open ? '' : 'hidden md:flex'}`}>
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div className="text-xl font-bold text-blue-400">HelpingAI</div>

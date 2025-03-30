@@ -9,10 +9,10 @@ const ChatInput = () => {
   const [message, setMessage] = useState("");
   const { sendMessage } = useChat();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (message.trim()) {
-      sendMessage(message.trim());
+      await sendMessage(message.trim());
       setMessage("");
     }
   };
@@ -27,7 +27,7 @@ const ChatInput = () => {
           placeholder="Type a message..."
           className="flex-1"
         />
-        <Button type="submit" size="icon" className="bg-helpingai-blue hover:bg-helpingai-darkBlue">
+        <Button type="submit" size="icon">
           <Send className="h-4 w-4" />
         </Button>
       </div>
