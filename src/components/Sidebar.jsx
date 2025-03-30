@@ -35,9 +35,10 @@ const Sidebar = ({ open, onClose }) => {
 
   const handleClearChat = (chatId) => {
     setIsDeleting(chatId); //Added for delete feedback
-    clearChat(chatId);
-    setTimeout(() => setIsDeleting(null), 500); //Added for delete feedback
-
+    setTimeout(() => {
+      clearChat(chatId);
+      setIsDeleting(null); //Added for delete feedback
+    }, 500);
   };
 
   return (
@@ -90,7 +91,7 @@ const Sidebar = ({ open, onClose }) => {
         {chats.map((chat) => (
           <div
             key={chat.id}
-            className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer ${
+            className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer relative group ${
               chat.id === currentChatId
                 ? "bg-primary/10 text-primary"
                 : "hover:bg-blue-200 hover:text-black"
@@ -101,7 +102,7 @@ const Sidebar = ({ open, onClose }) => {
             <Button
               variant="ghost"
               size="icon"
-              className={`h-6 w-6 z-10 absolute right-2 ${isDeleting === chat.id ? 'animate-pulse' : ''}`}
+              className={`h-6 w-6 text-red-500 ${isDeleting === chat.id ? 'animate-pulse' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 if (window.confirm('Are you sure you want to delete this chat?')) {
