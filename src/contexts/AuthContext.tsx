@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useToast } from "../hooks/use-toast"
 
@@ -39,13 +38,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   })
   const [isGuest, setIsGuest] = useState(false)
 
+  // Initialize user state with stored user data (if any)
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch (error) {
+        console.error('Failed to parse stored user data:', error)
+        localStorage.removeItem('user')
+      }
+    }
+  }, [])
+
+  // Save user to localStorage whenever it changes
+  useEffect(() => {
+    if (user) {
+      // Only save non-guest users to localStorage
+      if (!user.isGuest) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+    } else {
+      localStorage.removeItem("user");
+    }
+  }, [user]);
+
+
   // Clean up inactive users (10 days)
   useEffect(() => {
     const cleanupInactiveUsers = () => {
       const users = JSON.parse(localStorage.getItem('users') || '[]')
       const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000
       const activeUsers = users.filter((u: User) => u.lastActive > tenDaysAgo)
-      
+
       if (users.length !== activeUsers.length) {
         localStorage.setItem('users', JSON.stringify(activeUsers))
         toast({
@@ -54,7 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         })
       }
     }
-    
+
     cleanupInactiveUsers()
   }, [toast])
 
@@ -65,9 +91,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem('user')
         localStorage.removeItem('guestChats')
       }
-      
+
       window.addEventListener('beforeunload', handleBeforeUnload)
-      
+
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload)
       }
@@ -77,7 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = (username: string) => {
     const users = JSON.parse(localStorage.getItem('users') || '[]')
     const existingUser = users.find((u: User) => u.name === username)
-    
+
     if (!existingUser) {
       const newUser = {
         name: username,
@@ -88,7 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       users.push(newUser)
       localStorage.setItem('users', JSON.stringify(users))
       setUser(newUser)
-      
+
       toast({
         title: "New Account Created",
         description: "Welcome! Your account has been created."
@@ -98,7 +124,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('users', JSON.stringify(users))
       setUser(existingUser)
     }
-    
+
     setIsGuest(false)
     localStorage.setItem('user', JSON.stringify(existingUser || {
       name: username,

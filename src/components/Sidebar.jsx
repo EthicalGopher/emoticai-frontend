@@ -98,23 +98,28 @@ const SidebarContent = ({
       <div className="flex-1 overflow-y-auto px-2">
         <div className="space-y-1">
           {chats.map((chat) => (
-            <div 
-              key={chat.id}
-              className={`flex items-center justify-between group rounded-lg p-2 cursor-pointer hover:bg-accent ${activeChat?.id === chat.id ? 'bg-accent' : ''}`}
-              onClick={() => onChatSelect(chat)}
-            >
-              <div className="flex items-center gap-2 text-sm truncate flex-1">
-                <MessageSquare size={16} />
-                <span className="truncate">{chat.title}</span>
-              </div>
-              <TooltipProvider>
+            <TooltipProvider key={chat.id}>
+              <div 
+                className={`flex items-center justify-between group rounded-lg p-2 cursor-pointer ${activeChat?.id === chat.id ? 'bg-accent' : ''}`}
+                onClick={() => onChatSelect(chat)}
+              >
+                <div className="flex items-center gap-2 text-sm truncate flex-1">
+                  <MessageSquare size={16} />
+                  <span className="truncate">{chat.title}</span>
+                </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => onDeleteChat(e, chat.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('Are you sure you want to delete this chat?')) {
+                          onDeleteChat(e, chat.id);
+                        }
+                      }}
+                      aria-label="Delete chat"
                     >
                       <Trash2 size={14} />
                     </Button>
@@ -123,8 +128,8 @@ const SidebarContent = ({
                     <p>Delete chat</p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-            </div>
+              </div>
+            </TooltipProvider>
           ))}
           {chats.length === 0 && (
             <div className="text-sm text-muted-foreground text-center py-4">

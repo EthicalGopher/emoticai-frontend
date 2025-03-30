@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react'
 import { Mic, MicOff } from 'lucide-react'
 import { Button } from './ui/button'
+import { useToast } from './ui/use-toast'
 import { useToast } from '@/hooks/use-toast'
 
 const VoiceInput = ({ onTranscript }) => {
   const [isListening, setIsListening] = useState(false)
   const [recognition, setRecognition] = useState(null)
+  const { toast } = useToast()
   const { toast } = useToast()
 
   useEffect(() => {

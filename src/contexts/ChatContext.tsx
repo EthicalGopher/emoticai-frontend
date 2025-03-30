@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
+import { toast } from "@/components/ui/use-toast"
 
 export type Message = {
   id: string
@@ -130,14 +131,26 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const deleteChat = (id: string) => {
-    // Remove chat from array
-    const updatedChats = chats.filter(chat => chat.id !== id)
+    const updatedChats = chats.filter((chat) => chat.id !== id)
     setChats(updatedChats)
+
+    // Save updated chats to localStorage
+    if (user) {
+      const storageKey = isGuest ? 'guestChats' : `chats_${user.name}`
+      localStorage.setItem(storageKey, JSON.stringify(updatedChats))
+    }
 
     // Update active chat if the deleted chat was active
     if (activeChat && activeChat.id === id) {
       setActiveChat(updatedChats.length > 0 ? updatedChats[0] : null)
     }
+
+    // Confirm deletion with toast
+    toast({
+      title: "Chat deleted",
+      description: "The chat has been permanently removed.",
+      variant: "destructive"
+    });
   }
 
   const clearChats = () => {
