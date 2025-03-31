@@ -14,8 +14,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     <div className="flex justify-between items-center w-full  p-6  items-center border-b " style={{flexDirection:"row-reverse"}}>
         <div className="flex gap-2 ">
 
-        <div className="bg-blue-200  text-black border rounded-xl md:p-2  hidden md:block"><Link to="/speech">Voice Assistent</Link></div>
-        <div className="bg-blue-200  text-black border rounded-xl md:p-2 hidden md:block"><Link to="/">Chat Assistent</Link></div>
+        <div className="bg-blue-200  text-black border rounded-xl md:p-2  hidden md:block"><Link to="/speech">Voice Assistant</Link></div>
+        <div className="bg-blue-200  text-black border rounded-xl md:p-2 hidden md:block"><Link to="/">Chat Assistant</Link></div>
         </div>
       <div className="flex items-center gap-3">
         <Button
