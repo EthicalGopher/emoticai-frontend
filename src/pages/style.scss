@@ -19,18 +19,37 @@
     top: 70%;
     left: 50%;
     margin-left: -90px;
+    width: 180px; /* Explicit width helps with touch targets */
+    height: 180px; /* Explicit height helps with touch targets */
+    z-index: 100; /* Ensure button stays on top */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .aielement{
     scale: 1;
 }
 
+/* Fixed media query syntax - removed quotes */
 @media (max-width: 480px) {
     #micButton{
         scale: 0.7;
         top: 53%;
+        width: 200px; /* Larger touch target for mobile */
+        height: 200px; /* Larger touch target for mobile */
     }
     .aielement{
         scale: 2;
     }
 }
+
+/* Add styles for debug display */
+.status-indicator {
+    display: none; /* Hidden by default, only shown for debugging */
+}
+
+/* Uncomment this to show debug info */
+/* .status-indicator {
+    display: block;
+} */
